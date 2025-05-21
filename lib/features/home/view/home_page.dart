@@ -83,7 +83,6 @@ class HomePage extends StatelessWidget {
             subtitle:
                 'Show AI what you like, let it apply that vibe to your room.',
             onPressed: () {
-              // TODO: Implement navigation
               context.goNamed(RouterConstants.referenceStyle);
             },
           ),
@@ -94,7 +93,7 @@ class HomePage extends StatelessWidget {
             subtitle:
                 'Pick any door you love and transform your space with a touch.',
             onPressed: () {
-              // TODO: Implement navigation
+              context.goNamed(RouterConstants.paintVisualisation);
             },
           ),
           const SizedBox(height: 16),
@@ -104,7 +103,7 @@ class HomePage extends StatelessWidget {
             subtitle:
                 'Choose a style you adore and give your garden a new vibe.',
             onPressed: () {
-              // TODO: Implement navigation
+              context.goNamed(RouterConstants.gardenDesign);
             },
           ),
           const SizedBox(height: 16),
@@ -113,7 +112,7 @@ class HomePage extends StatelessWidget {
             title: 'Exterior Design',
             subtitle: 'Snap your home, pick a vibe, let AI craft the face.',
             onPressed: () {
-              // TODO: Implement navigation
+              context.goNamed(RouterConstants.exteriorDesign);
             },
           ),
         ],

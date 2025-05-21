@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interior_designer_jasper/features/create/view/create_page.dart';
+import 'package:interior_designer_jasper/features/exterior_design/view/feature_page.dart';
+import 'package:interior_designer_jasper/features/faqs/faq_view.dart';
 import 'package:interior_designer_jasper/features/home/view/home_page.dart';
+import 'package:interior_designer_jasper/features/paint_visualisation/view/feature_page.dart';
+import 'package:interior_designer_jasper/features/privacy_policy/privacy_policy.dart';
 import 'package:interior_designer_jasper/features/profile/view/profile_page.dart';
 import 'package:interior_designer_jasper/features/reference_style/view/feature_page.dart';
 import 'package:interior_designer_jasper/features/replace_object/view/feature_page.dart';
 import 'package:interior_designer_jasper/features/settings/view/settings_page.dart';
 import 'package:interior_designer_jasper/features/splash/view/splash_screen.dart';
+import 'package:interior_designer_jasper/features/garden_design/view/feature_page.dart';
+import 'package:interior_designer_jasper/features/tos/tos_view.dart';
 
 import 'router_constants.dart';
 
@@ -46,16 +52,9 @@ final _router = GoRouter(
     GoRoute(
       path: '/privacy-policy',
       name: RouterConstants.privacyPolicy,
-      builder:
-          (context, state) => const PlaceholderScreen(title: 'Privacy Policy'),
+      builder: (context, state) => const PrivacyPolicyPage(),
     ),
-    GoRoute(
-      path: '/terms-of-service',
-      name: RouterConstants.termsOfService,
-      builder:
-          (context, state) =>
-              const PlaceholderScreen(title: 'Terms of Service'),
-    ),
+
     GoRoute(
       path: '/your-board',
       name: RouterConstants.yourBoard,
@@ -75,6 +74,31 @@ final _router = GoRouter(
       path: '/reference',
       name: RouterConstants.referenceStyle,
       builder: (context, state) => const ReferenceStylePage(),
+    ),
+    GoRoute(
+      path: '/paint',
+      name: RouterConstants.paintVisualisation,
+      builder: (context, state) => const PaintPage(),
+    ),
+    GoRoute(
+      path: '/garden-design',
+      name: RouterConstants.gardenDesign,
+      builder: (context, state) => const GardenDesignPage(),
+    ),
+    GoRoute(
+      path: '/exterior-design',
+      name: RouterConstants.exteriorDesign,
+      builder: (context, state) => const ExteriorDesignPage(),
+    ),
+    GoRoute(
+      path: '/faqs',
+      name: RouterConstants.faqs,
+      builder: (context, state) => const FAQPage(),
+    ),
+    GoRoute(
+      path: '/tos',
+      name: RouterConstants.tos,
+      builder: (context, state) => const TermsOfServicePage(),
     ),
   ],
 );

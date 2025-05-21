@@ -29,7 +29,7 @@ class SettingsPage extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            context.goNamed(RouterConstants.home); // 👈 Navigate back to home
+            context.goNamed(RouterConstants.home); // 👈 Back to home
           },
         ),
         title: const Text('Settings', style: TextStyle(color: Colors.black)),
@@ -44,7 +44,21 @@ class SettingsPage extends StatelessWidget {
                 title: Text(item.title),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  // TODO: Add navigation or functionality
+                  switch (item.title) {
+                    case 'FAQ':
+                      context.goNamed(RouterConstants.faqs);
+                      break;
+                    case 'Privacy Policy':
+                      context.goNamed(RouterConstants.privacyPolicy);
+                      break;
+                    case 'Terms of Use':
+                      context.goNamed(RouterConstants.tos);
+                      break;
+                    default:
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('${item.title} tapped')),
+                      );
+                  }
                 },
               ),
             ),

@@ -1,17 +1,18 @@
 class RouterConstants {
-  static const splash = 'splash';
-  static const home = 'home';
-  static const editor = 'editor';
-  static const processing = 'processing';
-  static const profile = 'profile';
-  static const settings = 'settings';
-  static const privacyPolicy = 'privacyPolicy';
-  static const termsOfService = 'termsOfService';
-  static const yourBoard = 'yourBoard';
-  static const create = 'create';
+  static const String splash = 'splash';
+  static const String home = 'home';
+  static const String editor = 'editor';
+  static const String processing = 'processing';
+  static const String profile = 'profile';
+  static const String settings = 'settings';
+  static const String privacyPolicy = 'privacyPolicy';
+  static const String yourBoard = 'yourBoard';
+  static const String create = 'create';
   static const String replace = 'replace';
   static const String referenceStyle = 'reference_style';
   static const String paintVisualisation = 'paint_visualisation';
   static const String gardenDesign = 'garden_design';
   static const String exteriorDesign = 'exterior_design';
+  static const String faqs = 'faqs';
+  static const String tos = 'tos';
 }
