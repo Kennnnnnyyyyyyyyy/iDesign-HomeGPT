@@ -35,7 +35,7 @@ class HomePage extends StatelessWidget {
           padding: const EdgeInsets.only(left: 16),
           child: Center(
             child: Container(
-              width: 50, // 👈 Force width so text stays horizontal
+              width: 50,
               height: 28,
               alignment: Alignment.center,
               decoration: BoxDecoration(
@@ -49,9 +49,9 @@ class HomePage extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
                   letterSpacing: 1,
-                  overflow: TextOverflow.ellipsis, // 👈 Prevents wrapping
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1, // 👈 Explicitly prevent vertical wrap
+                maxLines: 1,
                 textAlign: TextAlign.center,
               ),
             ),
@@ -60,44 +60,61 @@ class HomePage extends StatelessWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        children: const [
+        children: [
           FeatureCard(
             imagePath: 'assets/home_page/interior_design.png',
             title: 'Interior Design',
             subtitle: 'Upload a pic, choose a style, let AI design the room!',
+            onPressed: () => context.goNamed(RouterConstants.create),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           FeatureCard(
             imagePath: 'assets/home_page/replace_object.png',
             title: 'Replace Objects',
             subtitle: 'Choose any object you wanna change, see it transform!',
+            onPressed: () {
+              context.goNamed(RouterConstants.replace);
+            },
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           FeatureCard(
             imagePath: 'assets/home_page/reference_style.png',
             title: 'Reference Style',
             subtitle:
                 'Show AI what you like, let it apply that vibe to your room.',
+            onPressed: () {
+              // TODO: Implement navigation
+              context.goNamed(RouterConstants.referenceStyle);
+            },
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           FeatureCard(
             imagePath: 'assets/home_page/paint_visualisation.png',
             title: 'Paint Visualisation',
             subtitle:
                 'Pick any door you love and transform your space with a touch.',
+            onPressed: () {
+              // TODO: Implement navigation
+            },
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           FeatureCard(
             imagePath: 'assets/home_page/garden_design.png',
             title: 'Garden Design',
             subtitle:
                 'Choose a style you adore and give your garden a new vibe.',
+            onPressed: () {
+              // TODO: Implement navigation
+            },
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           FeatureCard(
             imagePath: 'assets/home_page/exterior_design.png',
             title: 'Exterior Design',
             subtitle: 'Snap your home, pick a vibe, let AI craft the face.',
+            onPressed: () {
+              // TODO: Implement navigation
+            },
           ),
         ],
       ),

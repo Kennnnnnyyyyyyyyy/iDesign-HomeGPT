@@ -9,4 +9,9 @@ class RouterConstants {
   static const termsOfService = 'termsOfService';
   static const yourBoard = 'yourBoard';
   static const create = 'create';
+  static const String replace = 'replace';
+  static const String referenceStyle = 'reference_style';
+  static const String paintVisualisation = 'paint_visualisation';
+  static const String gardenDesign = 'garden_design';
+  static const String exteriorDesign = 'exterior_design';
 }

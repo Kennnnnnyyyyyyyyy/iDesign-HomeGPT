@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:interior_designer_jasper/features/create/view/create_page.dart';
 import 'package:interior_designer_jasper/features/home/view/home_page.dart';
 import 'package:interior_designer_jasper/features/profile/view/profile_page.dart';
+import 'package:interior_designer_jasper/features/reference_style/view/feature_page.dart';
+import 'package:interior_designer_jasper/features/replace_object/view/feature_page.dart';
 import 'package:interior_designer_jasper/features/settings/view/settings_page.dart';
 import 'package:interior_designer_jasper/features/splash/view/splash_screen.dart';
 
@@ -63,6 +65,16 @@ final _router = GoRouter(
       path: '/create',
       name: RouterConstants.create,
       builder: (context, state) => const CreatePage(),
+    ),
+    GoRoute(
+      name: RouterConstants.replace,
+      path: '/replace',
+      builder: (context, state) => const ReplaceObjectPage(),
+    ),
+    GoRoute(
+      path: '/reference',
+      name: RouterConstants.referenceStyle,
+      builder: (context, state) => const ReferenceStylePage(),
     ),
   ],
 );
