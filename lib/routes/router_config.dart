@@ -1,33 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'package:interior_designer_jasper/features/auth/view/sign_in_page.dart';
+import 'package:interior_designer_jasper/features/auth/view/sign_up_page.dart';
 import 'package:interior_designer_jasper/features/create/view/create_page.dart';
 import 'package:interior_designer_jasper/features/exterior_design/view/feature_page.dart';
 import 'package:interior_designer_jasper/features/faqs/faq_view.dart';
+import 'package:interior_designer_jasper/features/garden_design/view/feature_page.dart';
 import 'package:interior_designer_jasper/features/home/view/home_page.dart';
 import 'package:interior_designer_jasper/features/paint_visualisation/view/feature_page.dart';
+import 'package:interior_designer_jasper/features/paywall/view/paywall.dart';
 import 'package:interior_designer_jasper/features/privacy_policy/privacy_policy.dart';
 import 'package:interior_designer_jasper/features/profile/view/profile_page.dart';
 import 'package:interior_designer_jasper/features/reference_style/view/feature_page.dart';
 import 'package:interior_designer_jasper/features/replace_object/view/feature_page.dart';
 import 'package:interior_designer_jasper/features/settings/view/settings_page.dart';
 import 'package:interior_designer_jasper/features/splash/view/splash_screen.dart';
-import 'package:interior_designer_jasper/features/garden_design/view/feature_page.dart';
 import 'package:interior_designer_jasper/features/tos/tos_view.dart';
-
-import 'router_constants.dart';
+import 'package:interior_designer_jasper/routes/router_constants.dart';
 
 final _router = GoRouter(
   initialLocation: '/',
+  redirect: (context, state) {
+    final user = FirebaseAuth.instance.currentUser;
+    final isOnAuthRoute = [
+      '/signin',
+      '/signup',
+    ].contains(state.matchedLocation);
+
+    if (user == null && !isOnAuthRoute && state.matchedLocation != '/') {
+      return '/signin';
+    }
+
+    if (user != null && isOnAuthRoute) {
+      return '/home';
+    }
+
+    return null;
+  },
   routes: [
     GoRoute(
       path: '/',
       name: RouterConstants.splash,
-      builder: (context, state) => SplashScreen(),
+      builder: (context, state) => const SplashScreen(),
     ),
     GoRoute(
       path: '/home',
       name: RouterConstants.home,
-      builder: (context, state) => HomePage(),
+      builder: (context, state) => const HomePage(),
     ),
     GoRoute(
       path: '/editor',
@@ -42,19 +63,18 @@ final _router = GoRouter(
     GoRoute(
       path: '/profile',
       name: RouterConstants.profile,
-      builder: (context, state) => ProfilePage(),
+      builder: (context, state) => const ProfilePage(),
     ),
     GoRoute(
       path: '/settings',
       name: RouterConstants.settings,
-      builder: (context, state) => SettingsPage(),
+      builder: (context, state) => const SettingsPage(),
     ),
     GoRoute(
       path: '/privacy-policy',
       name: RouterConstants.privacyPolicy,
       builder: (context, state) => const PrivacyPolicyPage(),
     ),
-
     GoRoute(
       path: '/your-board',
       name: RouterConstants.yourBoard,
@@ -66,8 +86,8 @@ final _router = GoRouter(
       builder: (context, state) => const CreatePage(),
     ),
     GoRoute(
-      name: RouterConstants.replace,
       path: '/replace',
+      name: RouterConstants.replace,
       builder: (context, state) => const ReplaceObjectPage(),
     ),
     GoRoute(
@@ -100,12 +120,26 @@ final _router = GoRouter(
       name: RouterConstants.tos,
       builder: (context, state) => const TermsOfServicePage(),
     ),
+    GoRoute(
+      path: '/signin',
+      name: RouterConstants.signIn,
+      builder: (context, state) => const SignInPage(),
+    ),
+    GoRoute(
+      path: '/signup',
+      name: RouterConstants.signUp,
+      builder: (context, state) => const SignUpPage(),
+    ),
+    GoRoute(
+      path: '/paywall',
+      name: RouterConstants.paywall,
+      builder: (context, state) => const PaywallPage(),
+    ),
   ],
 );
 
 GoRouter get router => _router;
 
-/// Simple placeholder widget for routes
 class PlaceholderScreen extends StatelessWidget {
   final String title;
   const PlaceholderScreen({super.key, required this.title});

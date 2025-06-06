@@ -1,21 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
 
+    // Delay to show splash animation
     Future.delayed(const Duration(seconds: 2), () {
-      context.goNamed(RouterConstants.home);
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        context.goNamed(RouterConstants.signIn);
+      } else {
+        context.goNamed(RouterConstants.home);
+      }
     });
   }
 
@@ -29,13 +37,14 @@ class _SplashScreenState extends State<SplashScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Jasper HomeAI',
+                'HomeGPT - AI Interior Design',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.5,
                 ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
               TweenAnimationBuilder<double>(

@@ -40,6 +40,14 @@ dependencies:
   image_picker: ^1.1.2
   dotted_border: ^3.0.1
   glassmorphism: ^3.0.0
+  flutter_staggered_grid_view: ^0.7.0
+  flutter_card_swiper: ^7.0.2
+  flutter_dotenv: ^5.2.1
+  firebase_core: ^3.13.1
+  firebase_auth: ^5.5.4
+  http: ^1.4.0
+  google_sign_in: ^6.3.0
+  sign_in_with_apple: ^7.0.1
 
 dev_dependencies:
   flutter_test:
@@ -68,6 +76,8 @@ flutter:
     - assets/home_page/
     - assets/create/
     - assets/generated/
+    - .env
+    - assets/logo/
     
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

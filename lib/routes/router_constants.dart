@@ -15,4 +15,8 @@ class RouterConstants {
   static const String exteriorDesign = 'exterior_design';
   static const String faqs = 'faqs';
   static const String tos = 'tos';
+  static const String auth = 'auth';
+  static const String signIn = 'signin';
+  static const String signUp = 'signup';
+  static const String paywall = 'paywall';
 }

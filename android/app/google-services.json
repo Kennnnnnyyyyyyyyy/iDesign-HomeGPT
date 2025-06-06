@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "709086117435",
+    "project_id": "home-ai-3a75c",
+    "storage_bucket": "home-ai-3a75c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:709086117435:android:b8ec7dfe1d00f9ebfe261e",
+        "android_client_info": {
+          "package_name": "com.gnetsol.interior_designer_jasper"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "709086117435-85hdv8iq6rejs0hvrflmoehreu04t115.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAc5OXVlbF-Ie8FFR7luZlwVreFwBNx6eg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "709086117435-85hdv8iq6rejs0hvrflmoehreu04t115.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

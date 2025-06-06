@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interior_designer_jasper/features/auth/viewmodel/auth_controller.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     const userId = 'f8Wc75DoS0NEp...';
 
     final List<_SettingItem> settings = [
@@ -28,9 +30,7 @@ class SettingsPage extends StatelessWidget {
         backgroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            context.goNamed(RouterConstants.home); // 👈 Back to home
-          },
+          onPressed: () => context.goNamed(RouterConstants.home),
         ),
         title: const Text('Settings', style: TextStyle(color: Colors.black)),
       ),
@@ -101,6 +101,33 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 24),
+
+            // ✅ Sign Out Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  backgroundColor: Colors.red.shade600,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.logout),
+                label: const Text("Sign Out"),
+                onPressed: () async {
+                  await ref.read(authControllerProvider.notifier).signOut();
+                  if (context.mounted) {
+                    context.go('/signin'); // Replace with your sign-in route
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Signed out successfully")),
+                    );
+                  }
+                },
+              ),
+            ),
+
             const Spacer(),
             const Padding(
               padding: EdgeInsets.only(bottom: 24),

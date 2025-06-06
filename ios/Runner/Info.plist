@@ -45,5 +45,17 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+	<dict>
+		<key>CFBundleURLSchemes</key>
+		<array>
+		<string>com.googleusercontent.apps.709086117435-s6bsjrk7cb9tkb5lcdjf7jk3qrl215pk</string> <!-- Replace with your actual bundle ID -->
+		</array>
+	</dict>
+	</array>
+	<key>SignInWithApple</key>
+	<true/>
+
 </dict>
 </plist>
