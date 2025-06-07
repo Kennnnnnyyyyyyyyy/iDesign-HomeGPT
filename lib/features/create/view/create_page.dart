@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:interior_designer_jasper/core/providers/ai_design_generator_provider.dart';
+import 'package:interior_designer_jasper/core/providers/ai_design_uploader_provider.dart';
+import 'package:interior_designer_jasper/core/providers/ai_image_generator.dart';
+import 'package:interior_designer_jasper/core/providers/replicate_output_parser.dart';
 import 'package:interior_designer_jasper/features/create/viewmodel/create_form_notifier.dart';
 import 'package:interior_designer_jasper/features/create/view/widgets/step1_photo_input.dart';
 import 'package:interior_designer_jasper/features/create/view/widgets/step2_room_selection.dart';
@@ -32,7 +36,7 @@ class _CreatePageState extends ConsumerState<CreatePage> {
     ref.read(createFormProvider.notifier).setImage(assetPath);
   }
 
-  void _nextStep() {
+  Future<void> _nextStep() async {
     final form = ref.read(createFormProvider);
 
     // Step 1: Validate photo selection
@@ -71,7 +75,7 @@ class _CreatePageState extends ConsumerState<CreatePage> {
     if (_currentStep < 3) {
       setState(() => _currentStep++);
     } else {
-      _generateDesign();
+      await ref.read(aiDesignGeneratorProvider(context)).generate();
     }
   }
 
@@ -82,11 +86,13 @@ class _CreatePageState extends ConsumerState<CreatePage> {
   void _generateDesign() async {
     final notifier = ref.read(createFormProvider.notifier);
     final form = ref.read(createFormProvider);
+    final parser = ref.read(replicateOutputParserProvider);
+    final uploader = ref.read(aiDesignUploaderProvider);
 
     if (form.image == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please choose a photo from gallery.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please choose a photo.')));
       return;
     }
 
@@ -94,20 +100,53 @@ class _CreatePageState extends ConsumerState<CreatePage> {
       context,
     ).showSnackBar(const SnackBar(content: Text('Uploading image...')));
 
-    final imageUrl = await notifier.uploadImageToSupabase();
-    if (imageUrl == null) {
+    final uploadResult = await notifier.uploadImageToSupabase();
+    if (uploadResult == null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Image upload failed.')));
       return;
     }
 
+    final imageUrl = uploadResult['publicUrl']!;
+    final filePath = uploadResult['filePath']!;
     final prompt = notifier.getPrompt();
 
-    print('--- READY TO CALL AI API ---');
-    print('Prompt: $prompt');
-    print('Image URL: $imageUrl');
-    print('-----------------------------');
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Generating design...')));
+
+    final response = await ref
+        .read(aiPromptSenderProvider.notifier)
+        .send(filePath: filePath, imageUrl: imageUrl, prompt: prompt);
+
+    if (response == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('AI failed to respond.')));
+      return;
+    }
+
+    final outputUrl = parser(response.body);
+
+    if (outputUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('AI response received, but no image.')),
+      );
+      return;
+    }
+
+    print('🎨 Output Image URL: $outputUrl');
+
+    await uploader.upload(
+      prompt: prompt,
+      imageUrl: imageUrl,
+      outputUrl: outputUrl,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('✅ Design saved to Supabase.')),
+    );
   }
 
   @override

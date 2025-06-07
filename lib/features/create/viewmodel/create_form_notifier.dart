@@ -58,7 +58,7 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
   }
 
   /// ✅ Upload any type of image (File, asset, or URL) to Supabase if needed
-  Future<String?> uploadImageToSupabase({int retries = 3}) async {
+  Future<Map<String, String>?> uploadImageToSupabase({int retries = 3}) async {
     final image = state.image;
 
     if (image == null) {
@@ -71,6 +71,7 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
     // 🔹 1. File (gallery)
     if (image is File) {
       final fileName = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final storagePath = 'uploads/$fileName';
 
       for (int attempt = 0; attempt < retries; attempt++) {
         try {
@@ -78,7 +79,7 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
           await supabase.storage
               .from('temp-image')
               .upload(
-                'uploads/$fileName',
+                storagePath,
                 image,
                 fileOptions: const FileOptions(
                   upsert: true,
@@ -88,10 +89,10 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
 
           final publicUrl = supabase.storage
               .from('temp-image')
-              .getPublicUrl('uploads/$fileName');
+              .getPublicUrl(storagePath);
           print('✅ Upload successful: $publicUrl');
           setImageUrl(publicUrl);
-          return publicUrl;
+          return {'publicUrl': publicUrl, 'filePath': '/$storagePath'};
         } catch (e) {
           print('❌ Upload attempt ${attempt + 1} failed: $e');
           if (attempt == retries - 1) return null;
@@ -99,37 +100,41 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
         }
       }
     }
-    // 🔹 2. Asset image (e.g., 'assets/example_photos/example1.jpg')
+    // 🔹 2. Asset image
     else if (image is String && image.startsWith('assets/')) {
       try {
         final byteData = await rootBundle.load(image);
         final bytes = byteData.buffer.asUint8List();
         final fileName = 'asset_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final storagePath = 'uploads/$fileName';
 
         await supabase.storage
             .from('temp-image')
             .uploadBinary(
-              'uploads/$fileName',
+              storagePath,
               bytes,
               fileOptions: const FileOptions(contentType: 'image/jpeg'),
             );
 
         final publicUrl = supabase.storage
             .from('temp-image')
-            .getPublicUrl('uploads/$fileName');
+            .getPublicUrl(storagePath);
         print('✅ Asset upload successful: $publicUrl');
         setImageUrl(publicUrl);
-        return publicUrl;
+        return {'publicUrl': publicUrl, 'filePath': '/$storagePath'};
       } catch (e) {
         print('❌ Asset upload failed: $e');
         return null;
       }
     }
-    // 🔹 3. Already-hosted URL (e.g., Unsplash or public image)
+    // 🔹 3. Already-hosted URL
     else if (image is String && image.startsWith('http')) {
       print('🌐 Using hosted image URL directly.');
       setImageUrl(image);
-      return image;
+      return {
+        'publicUrl': image,
+        'filePath': '', // Not stored in Supabase
+      };
     }
 
     print('❌ Unsupported image type.');
