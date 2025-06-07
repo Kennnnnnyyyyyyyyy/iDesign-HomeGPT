@@ -27,6 +27,37 @@ class _Step3StyleSelectionState extends State<Step3StyleSelection> {
     {'name': 'Mediterranean', 'icon': Icons.beach_access},
   ];
 
+  Future<void> _showCustomStyleDialog() async {
+    String input = '';
+    final customStyle = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Enter Custom Style'),
+          content: TextField(
+            autofocus: true,
+            onChanged: (value) => input = value,
+            decoration: const InputDecoration(hintText: 'e.g. Futuristic Zen'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, input),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (customStyle != null && customStyle.trim().isNotEmpty) {
+      widget.onStyleSelected(customStyle.trim());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -54,10 +85,27 @@ class _Step3StyleSelectionState extends State<Step3StyleSelection> {
             ),
             itemBuilder: (context, index) {
               final style = styles[index];
-              final isSelected = widget.selectedStyle == style['name'];
+              final isCustom = style['name'] == 'Custom';
+
+              // selectedStyle might be a custom input (not in styles list)
+              final isSelected =
+                  isCustom
+                      ? !styles.any(
+                        (s) =>
+                            s['name'] != 'Custom' &&
+                            s['name'].toString().toLowerCase() ==
+                                widget.selectedStyle.toLowerCase(),
+                      )
+                      : widget.selectedStyle == style['name'];
 
               return GestureDetector(
-                onTap: () => widget.onStyleSelected(style['name']),
+                onTap: () {
+                  if (isCustom) {
+                    _showCustomStyleDialog();
+                  } else {
+                    widget.onStyleSelected(style['name']);
+                  }
+                },
                 child: Container(
                   decoration: BoxDecoration(
                     color: const Color(0xFFF5F6FA),

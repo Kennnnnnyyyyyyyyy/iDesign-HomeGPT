@@ -1,11 +1,19 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:dotted_border/dotted_border.dart'; // 👈 Import this
+import 'package:dotted_border/dotted_border.dart';
 
 class Step1PhotoInput extends StatelessWidget {
   final VoidCallback onPickPhoto;
+  final void Function(String assetPath) onExamplePhotoSelected;
+  final Object? selectedImageSource;
 
-  const Step1PhotoInput({super.key, required this.onPickPhoto});
+  const Step1PhotoInput({
+    super.key,
+    required this.onPickPhoto,
+    required this.onExamplePhotoSelected,
+    required this.selectedImageSource,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +33,26 @@ class Step1PhotoInput extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // ⬇️ REPLACED THIS BLOCK
+        // Show selected image (gallery or example)
+        if (selectedImageSource != null)
+          Container(
+            height: 200,
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            clipBehavior: Clip.hardEdge,
+            child:
+                selectedImageSource is File
+                    ? Image.file(selectedImageSource as File, fit: BoxFit.cover)
+                    : Image.asset(
+                      selectedImageSource as String,
+                      fit: BoxFit.cover,
+                    ),
+          ),
+
         DottedBorder(
           options: const RectDottedBorderOptions(
             dashPattern: [6, 3],
@@ -33,7 +60,7 @@ class Step1PhotoInput extends StatelessWidget {
             padding: EdgeInsets.all(0),
           ),
           child: Container(
-            height: 220,
+            height: 180,
             width: double.infinity,
             alignment: Alignment.center,
             child: Column(
@@ -81,13 +108,17 @@ class Step1PhotoInput extends StatelessWidget {
             itemCount: exampleImages.length,
             separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
-              return ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  exampleImages[index],
-                  height: 100,
-                  width: 100,
-                  fit: BoxFit.cover,
+              final path = exampleImages[index];
+              return GestureDetector(
+                onTap: () => onExamplePhotoSelected(path),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    path,
+                    height: 100,
+                    width: 100,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               );
             },
