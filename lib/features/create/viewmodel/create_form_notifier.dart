@@ -1,15 +1,15 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:flutter/services.dart'; // for asset loading
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CreateFormState {
-  final Object? image; // File, asset path, or image URL
+  final Object? image;
   final String room;
   final String style;
   final String palette;
-  final String? imageUrl; // ✅ Public URL after upload
+  final String? imageUrl;
 
   CreateFormState({
     this.image,
@@ -45,7 +45,6 @@ class CreateFormNotifier extends StateNotifier<CreateFormState> {
   void setPalette(String palette) => state = state.copyWith(palette: palette);
   void setImageUrl(String url) => state = state.copyWith(imageUrl: url);
 
-  /// ✅ Generate AI prompt based on current state
   String getPrompt() {
     final palette =
         state.palette.trim().toLowerCase() == 'surprise me'
@@ -57,7 +56,6 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
 '''.trim();
   }
 
-  /// ✅ Upload any type of image (File, asset, or URL) to Supabase if needed
   Future<Map<String, String>?> uploadImageToSupabase({int retries = 3}) async {
     final image = state.image;
 
@@ -68,14 +66,14 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
 
     final supabase = Supabase.instance.client;
 
-    // 🔹 1. File (gallery)
+    // 🔹 1. File from gallery
     if (image is File) {
       final fileName = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final storagePath = 'uploads/$fileName';
 
       for (int attempt = 0; attempt < retries; attempt++) {
         try {
-          print("⏫ Uploading file attempt ${attempt + 1}...");
+          print("📤 Uploading file attempt ${attempt + 1}...");
           await supabase.storage
               .from('temp-image')
               .upload(
@@ -90,7 +88,7 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
           final publicUrl = supabase.storage
               .from('temp-image')
               .getPublicUrl(storagePath);
-          print('✅ Upload successful: $publicUrl');
+          print('✅ Upload successful:\nURL: $publicUrl\nPath: /$storagePath');
           setImageUrl(publicUrl);
           return {'publicUrl': publicUrl, 'filePath': '/$storagePath'};
         } catch (e) {
@@ -103,6 +101,7 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
     // 🔹 2. Asset image
     else if (image is String && image.startsWith('assets/')) {
       try {
+        print("📤 Uploading asset image...");
         final byteData = await rootBundle.load(image);
         final bytes = byteData.buffer.asUint8List();
         final fileName = 'asset_${DateTime.now().millisecondsSinceEpoch}.jpg';
@@ -119,7 +118,9 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
         final publicUrl = supabase.storage
             .from('temp-image')
             .getPublicUrl(storagePath);
-        print('✅ Asset upload successful: $publicUrl');
+        print(
+          '✅ Asset upload successful:\nURL: $publicUrl\nPath: /$storagePath',
+        );
         setImageUrl(publicUrl);
         return {'publicUrl': publicUrl, 'filePath': '/$storagePath'};
       } catch (e) {
@@ -129,15 +130,15 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
     }
     // 🔹 3. Already-hosted URL
     else if (image is String && image.startsWith('http')) {
-      print('🌐 Using hosted image URL directly.');
+      print('🌐 Using hosted image URL directly:\n$image');
       setImageUrl(image);
       return {
         'publicUrl': image,
-        'filePath': '', // Not stored in Supabase
+        'filePath': '', // External images not uploaded
       };
     }
 
-    print('❌ Unsupported image type.');
+    print('❌ Unsupported image type. Value: $image');
     return null;
   }
 }

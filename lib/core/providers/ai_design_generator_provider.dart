@@ -11,7 +11,8 @@ class AiDesignGenerator {
 
   AiDesignGenerator(this.ref, this.context);
 
-  Future<void> generate() async {
+  /// ✅ Now returns the final output image URL from Replicate
+  Future<String?> generate() async {
     final notifier = ref.read(createFormProvider.notifier);
     final form = ref.read(createFormProvider);
     final parser = ref.read(replicateOutputParserProvider);
@@ -19,14 +20,14 @@ class AiDesignGenerator {
 
     if (form.image == null) {
       _showSnackBar('Please choose a photo.');
-      return;
+      return null;
     }
 
     _showSnackBar('Uploading image...');
     final uploadResult = await notifier.uploadImageToSupabase();
     if (uploadResult == null) {
       _showSnackBar('Image upload failed.');
-      return;
+      return null;
     }
 
     final imageUrl = uploadResult['publicUrl']!;
@@ -40,16 +41,17 @@ class AiDesignGenerator {
 
     if (response == null) {
       _showSnackBar('AI failed to respond.');
-      return;
+      return null;
     }
 
     final outputUrl = parser(response.body);
     if (outputUrl == null) {
       _showSnackBar('AI response received, but no image.');
-      return;
+      return null;
     }
 
     print('🎨 Output Image URL: $outputUrl');
+
     await uploader.upload(
       prompt: prompt,
       imageUrl: imageUrl,
@@ -57,6 +59,8 @@ class AiDesignGenerator {
     );
 
     _showSnackBar('✅ Design saved to Supabase.');
+
+    return outputUrl;
   }
 
   void _showSnackBar(String message) {

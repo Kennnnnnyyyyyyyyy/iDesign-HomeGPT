@@ -23,6 +23,12 @@ class AiPromptSender extends StateNotifier<AsyncValue<void>> {
       'prompt': prompt,
     });
 
+    // ✅ Log the request body
+    print('📤 Sending to Supabase Edge Function:');
+    print('filePath: $filePath');
+    print('imageUrl: $imageUrl');
+    print('prompt: $prompt');
+
     try {
       final response = await http.post(
         url,
