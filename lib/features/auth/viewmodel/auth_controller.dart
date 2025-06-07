@@ -152,4 +152,33 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
     final response = await supabaseClient.from('firebase_users').upsert(data);
     print('[Supabase] Sync response: $response');
   }
+
+  Future<void> syncAnonymousUserToSupabase() async {
+    final supabaseClient = supabase.Supabase.instance.client;
+    final user = supabaseClient.auth.currentUser;
+
+    if (user == null) {
+      print('[Anon Sync] No current user found');
+      return;
+    }
+
+    final now = DateTime.now().toUtc().toIso8601String();
+
+    final data = {
+      'uid': user.id,
+      'email': user.email,
+      'email_verified': false,
+      'sign_in_provider': 'anonymous',
+      'first_sign_in': now,
+      'last_sign_in': now,
+      'display_name': null,
+      'photo_url': null,
+      'phone_number': null,
+      'metadata': {'createdAt': now, 'lastLogin': now},
+      'provider_data': [],
+    };
+
+    final response = await supabaseClient.from('firebase_users').upsert(data);
+    print('[Anon Supabase Sync] Response: $response');
+  }
 }

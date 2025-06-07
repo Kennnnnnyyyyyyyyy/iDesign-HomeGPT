@@ -19,4 +19,5 @@ class RouterConstants {
   static const String signIn = 'signin';
   static const String signUp = 'signup';
   static const String paywall = 'paywall';
+  static const String aiResult = 'aiResult';
 }

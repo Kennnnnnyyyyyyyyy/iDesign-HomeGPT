@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:interior_designer_jasper/features/auth/viewmodel/auth_controller.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
+import 'package:interior_designer_jasper/features/auth/providers/auth_provider.dart'; // For supabaseProvider
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const userId = 'f8Wc75DoS0NEp...';
+    final supabase = ref.watch(supabaseProvider);
+    final userId = supabase.auth.currentUser?.id ?? 'Unknown';
 
     final List<_SettingItem> settings = [
       _SettingItem(Icons.send, 'Feedback'),
@@ -80,18 +81,20 @@ class SettingsPage extends ConsumerWidget {
                     const SizedBox(width: 12),
                     const Text('User ID'),
                     const Spacer(),
-                    Text(
-                      userId,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.black54,
+                    Flexible(
+                      child: Text(
+                        userId,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black54,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
                     IconButton(
                       icon: const Icon(Icons.copy, size: 18),
                       onPressed: () {
-                        Clipboard.setData(const ClipboardData(text: userId));
+                        Clipboard.setData(ClipboardData(text: userId));
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('User ID copied!')),
                         );
@@ -102,37 +105,11 @@ class SettingsPage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-
-            // ✅ Sign Out Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
-                  backgroundColor: Colors.red.shade600,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: const Icon(Icons.logout),
-                label: const Text("Sign Out"),
-                onPressed: () async {
-                  await ref.read(authControllerProvider.notifier).signOut();
-                  if (context.mounted) {
-                    context.go('/signin'); // Replace with your sign-in route
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Signed out successfully")),
-                    );
-                  }
-                },
-              ),
-            ),
-
             const Spacer(),
             const Padding(
               padding: EdgeInsets.only(bottom: 24),
               child: Text(
-                'Version 1.4.4',
+                'Version 1.0.0',
                 style: TextStyle(color: Colors.grey),
               ),
             ),

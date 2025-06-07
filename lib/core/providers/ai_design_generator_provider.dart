@@ -52,13 +52,13 @@ class AiDesignGenerator {
 
     print('🎨 Output Image URL: $outputUrl');
 
-    await uploader.upload(
-      prompt: prompt,
-      imageUrl: imageUrl,
-      outputUrl: outputUrl,
-    );
+    // await uploader.saveDesign(
+    //   prompt: prompt,
+    //   imageUrl: imageUrl,
+    //   outputUrl: outputUrl,
+    // );
 
-    _showSnackBar('✅ Design saved to Supabase.');
+    // _showSnackBar('✅ Design saved to Supabase.');
 
     return outputUrl;
   }

@@ -8,7 +8,8 @@ class AiDesignUploader {
 
   AiDesignUploader(this._supabase, this._auth);
 
-  Future<void> upload({
+  Future<void> saveDesign({
+    // 🔁 Renamed from upload
     required String prompt,
     required String imageUrl,
     required String outputUrl,
@@ -26,11 +27,12 @@ class AiDesignUploader {
         'image_url': imageUrl,
         'output_url': outputUrl,
         'firebase_uid': uid,
+        'created_at': DateTime.now().toIso8601String(), // Optional: timestamp
       });
 
-      print('✅ Design uploaded to Supabase.');
+      print('✅ Design saved to Supabase.');
     } catch (e) {
-      print('❌ Failed to upload design to Supabase: $e');
+      print('❌ Failed to save design: $e');
     }
   }
 }

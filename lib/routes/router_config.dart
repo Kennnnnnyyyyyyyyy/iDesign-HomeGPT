@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:interior_designer_jasper/features/ai_results/ai_results_view.dart';
 import 'package:interior_designer_jasper/features/auth/view/sign_in_page.dart';
 import 'package:interior_designer_jasper/features/auth/view/sign_up_page.dart';
 import 'package:interior_designer_jasper/features/create/view/create_page.dart';
@@ -19,21 +18,24 @@ import 'package:interior_designer_jasper/features/settings/view/settings_page.da
 import 'package:interior_designer_jasper/features/splash/view/splash_screen.dart';
 import 'package:interior_designer_jasper/features/tos/tos_view.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 final _router = GoRouter(
   initialLocation: '/',
   redirect: (context, state) {
-    final user = FirebaseAuth.instance.currentUser;
+    final session = Supabase.instance.client.auth.currentSession;
     final isOnAuthRoute = [
       '/signin',
       '/signup',
     ].contains(state.matchedLocation);
 
-    if (user == null && !isOnAuthRoute && state.matchedLocation != '/') {
-      return '/signin';
+    if (session == null && !isOnAuthRoute && state.matchedLocation != '/') {
+      // Anonymous session failed — usually shouldn't happen, but fallback to splash
+      return '/';
     }
 
-    if (user != null && isOnAuthRoute) {
+    if (session != null && isOnAuthRoute) {
+      // Already logged in anonymously — block auth pages
       return '/home';
     }
 
@@ -134,6 +136,14 @@ final _router = GoRouter(
       path: '/paywall',
       name: RouterConstants.paywall,
       builder: (context, state) => const PaywallPage(),
+    ),
+    GoRoute(
+      path: '/ai-result',
+      name: RouterConstants.aiResult,
+      builder: (context, state) {
+        final imageUrl = state.extra as String;
+        return AiResultPage(imageUrl: imageUrl);
+      },
     ),
   ],
 );

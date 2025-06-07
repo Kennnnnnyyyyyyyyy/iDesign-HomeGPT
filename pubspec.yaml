@@ -48,6 +48,9 @@ dependencies:
   http: ^1.4.0
   google_sign_in: ^6.3.0
   sign_in_with_apple: ^7.0.1
+  share_plus: ^11.0.0
+  path_provider: ^2.1.5
+  image_gallery_saver: ^2.0.3
 
 dev_dependencies:
   flutter_test:

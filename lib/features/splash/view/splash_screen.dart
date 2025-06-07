@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:interior_designer_jasper/features/auth/providers/auth_provider.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -16,13 +16,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void initState() {
     super.initState();
 
-    // Delay to show splash animation
-    Future.delayed(const Duration(seconds: 2), () {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        context.goNamed(RouterConstants.signIn);
-      } else {
+    Future.delayed(const Duration(seconds: 2), () async {
+      await ref.read(authNotifierProvider.notifier).signInAnonymously();
+
+      final user = ref.read(supabaseProvider).auth.currentUser;
+      if (user != null) {
         context.goNamed(RouterConstants.home);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('❌ Anonymous sign-in failed')),
+        );
       }
     });
   }

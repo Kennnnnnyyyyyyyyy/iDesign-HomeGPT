@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:interior_designer_jasper/core/providers/ai_design_generator_provider.dart';
-import 'package:interior_designer_jasper/core/providers/replicate_image_uploader.dart';
+import 'package:interior_designer_jasper/core/providers/ai_pipeline_executor.dart';
 import 'package:interior_designer_jasper/features/create/viewmodel/create_form_notifier.dart';
 import 'package:interior_designer_jasper/features/create/view/widgets/step1_photo_input.dart';
 import 'package:interior_designer_jasper/features/create/view/widgets/step2_room_selection.dart';
@@ -37,7 +36,6 @@ class _CreatePageState extends ConsumerState<CreatePage> {
   Future<void> _nextStep() async {
     final form = ref.read(createFormProvider);
 
-    // Step 1: Validate photo selection
     if (_currentStep == 0 && form.image == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a photo to continue.')),
@@ -45,7 +43,6 @@ class _CreatePageState extends ConsumerState<CreatePage> {
       return;
     }
 
-    // Step 2: Validate room selection
     if (_currentStep == 1 && form.room.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a room to continue.')),
@@ -53,7 +50,6 @@ class _CreatePageState extends ConsumerState<CreatePage> {
       return;
     }
 
-    // Step 3: Validate style selection
     if (_currentStep == 2 && form.style.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a style to continue.')),
@@ -61,7 +57,6 @@ class _CreatePageState extends ConsumerState<CreatePage> {
       return;
     }
 
-    // Step 4: Validate palette selection
     if (_currentStep == 3 && form.palette.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a palette to continue.')),
@@ -69,26 +64,14 @@ class _CreatePageState extends ConsumerState<CreatePage> {
       return;
     }
 
-    // Proceed or generate
     if (_currentStep < 3) {
       setState(() => _currentStep++);
     } else {
-      final outputUrl =
-          await ref.read(aiDesignGeneratorProvider(context)).generate();
-
-      if (outputUrl != null) {
-        final uploader = ref.read(replicateImageUploaderProvider.notifier);
-        final finalUrl = await uploader.upload(outputUrl);
-
-        if (finalUrl != null) {
-          print('✅ Final stored image: $finalUrl');
-          // Optionally set it in state:
-          ref.read(createFormProvider.notifier).setImageUrl(finalUrl);
-        } else {
-          print('❌ Failed to store image in ai-output bucket.');
+      final finalUrl = await ref.read(aiPipelineProvider(context)).execute();
+      if (finalUrl != null) {
+        if (context.mounted) {
+          context.goNamed(RouterConstants.aiResult, extra: finalUrl);
         }
-      } else {
-        print('❌ AI generation failed or returned null.');
       }
     }
   }
@@ -146,7 +129,7 @@ class _CreatePageState extends ConsumerState<CreatePage> {
                   Expanded(
                     child: Center(
                       child: Text(
-                        'Step ${_currentStep + 1} of ${steps.length}',
+                        "Step ${_currentStep + 1} of ${steps.length}",
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
