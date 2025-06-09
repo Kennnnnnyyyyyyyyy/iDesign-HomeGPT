@@ -46,9 +46,12 @@ class AiResultPage extends StatelessWidget {
       final imageFile = File(imagePath);
       await imageFile.writeAsBytes(response.bodyBytes);
 
-      await Share.shareXFiles([
-        XFile(imageFile.path),
-      ], text: 'Check out my AI generated room design!');
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(imageFile.path)],
+          text: 'Check out my AI generated room design!',
+        ),
+      );
     } catch (e) {
       print('❌ Share failed: $e');
     }

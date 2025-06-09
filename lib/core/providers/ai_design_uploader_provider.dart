@@ -26,7 +26,7 @@ class AiDesignUploader {
         'prompt': prompt,
         'image_url': imageUrl,
         'output_url': outputUrl,
-        'firebase_uid': uid,
+        'supabase_uid': uid,
         'created_at': DateTime.now().toIso8601String(), // Optional: timestamp
       });
 

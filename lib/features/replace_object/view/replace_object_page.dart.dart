@@ -1,0 +1,211 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:interior_designer_jasper/routes/router_constants.dart';
+import 'package:interior_designer_jasper/features/replace_object/view/paint_dialog_content.dart';
+
+class ReplaceObjectPage extends StatelessWidget {
+  const ReplaceObjectPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final exampleImages = [
+      'assets/create/br1.jpeg',
+      'assets/create/br2.jpeg',
+      'assets/create/br3.jpeg',
+      'assets/create/br4.jpeg',
+    ];
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildAppBar(context),
+            _buildHeroSection(context),
+            const SizedBox(height: 32),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Example Photos',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildExampleImages(exampleImages),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppBar(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    child: Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.redAccent,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Text(
+            'PRO',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
+        ),
+        const Spacer(),
+        const Text(
+          'Replace Objects',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        const Spacer(),
+        IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => context.goNamed(RouterConstants.home),
+        ),
+      ],
+    ),
+  );
+
+  Widget _buildHeroSection(BuildContext context) => ClipRRect(
+    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        SizedBox(
+          height: 300,
+          width: double.infinity,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(
+                'assets/home_page/replace_object.png',
+                fit: BoxFit.cover,
+              ),
+              Container(color: Colors.black.withOpacity(0.4)),
+            ],
+          ),
+        ),
+        Positioned(
+          top: 20,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: const Text(
+              '✨ Put a cabinet instead of a tree!',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+        ),
+        const Positioned(
+          bottom: 72,
+          child: Column(
+            children: [
+              Text(
+                'Retouch',
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Mark, retouch, and reimagine your space with AI.',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          bottom: 20,
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            onPressed: () async {
+              final picker = ImagePicker();
+              final picked = await picker.pickImage(
+                source: ImageSource.gallery,
+              );
+              if (picked != null) {
+                final imageFile = File(picked.path);
+                showDialog(
+                  context: context,
+                  builder:
+                      (_) => Dialog(
+                        insetPadding: const EdgeInsets.all(8),
+                        backgroundColor: Colors.black,
+                        child: PaintDialogContent(imageFile: imageFile),
+                      ),
+                );
+              }
+            },
+            icon: const Icon(Icons.add, color: Colors.white),
+            label: const Text('Upload', style: TextStyle(color: Colors.white)),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _buildExampleImages(List<String> images) => SizedBox(
+    height: 110,
+    child: ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      scrollDirection: Axis.horizontal,
+      itemCount: images.length,
+      separatorBuilder: (_, __) => const SizedBox(width: 14),
+      itemBuilder:
+          (context, index) => GestureDetector(
+            onTap: () async {
+              // Load asset image bytes
+              final byteData = await DefaultAssetBundle.of(
+                context,
+              ).load(images[index]);
+              final bytes = byteData.buffer.asUint8List();
+
+              // Save it to a temp file
+              final tempDir = await Directory.systemTemp.createTemp();
+              final tempFile = File('${tempDir.path}/example_$index.jpg');
+              await tempFile.writeAsBytes(bytes);
+
+              // Open paint dialog with this file
+              showDialog(
+                context: context,
+                builder:
+                    (_) => Dialog(
+                      insetPadding: const EdgeInsets.all(8),
+                      backgroundColor: Colors.black,
+                      child: PaintDialogContent(imageFile: tempFile),
+                    ),
+              );
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                images[index],
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+    ),
+  );
+}

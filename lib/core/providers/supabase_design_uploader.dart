@@ -21,7 +21,7 @@ class AiDesignDatabaseUploader {
       await supabase.from('ai_designs').insert({
         'prompt': prompt,
         'output_url': outputUrl,
-        'firebase_uid': uid,
+        'supabase_uid': uid,
         'created_at': DateTime.now().toIso8601String(),
       });
 

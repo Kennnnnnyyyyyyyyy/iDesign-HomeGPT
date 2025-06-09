@@ -13,7 +13,7 @@ import 'package:interior_designer_jasper/features/paywall/view/paywall.dart';
 import 'package:interior_designer_jasper/features/privacy_policy/privacy_policy.dart';
 import 'package:interior_designer_jasper/features/profile/view/profile_page.dart';
 import 'package:interior_designer_jasper/features/reference_style/view/feature_page.dart';
-import 'package:interior_designer_jasper/features/replace_object/view/feature_page.dart';
+import 'package:interior_designer_jasper/features/replace_object/view/replace_object_page.dart.dart';
 import 'package:interior_designer_jasper/features/settings/view/settings_page.dart';
 import 'package:interior_designer_jasper/features/splash/view/splash_screen.dart';
 import 'package:interior_designer_jasper/features/tos/tos_view.dart';
