@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interior_designer_jasper/features/exterior_design/providers/exterior_providers.dart'; // Adjust this import
 
-class Step2ExteriorBuildingType extends StatelessWidget {
+class Step2ExteriorBuildingType extends ConsumerStatefulWidget {
   final VoidCallback onContinue;
   final VoidCallback onBack;
   final VoidCallback onClose;
@@ -11,6 +13,26 @@ class Step2ExteriorBuildingType extends StatelessWidget {
     required this.onBack,
     required this.onClose,
   });
+
+  @override
+  ConsumerState<Step2ExteriorBuildingType> createState() =>
+      _Step2ExteriorBuildingTypeState();
+}
+
+class _Step2ExteriorBuildingTypeState
+    extends ConsumerState<Step2ExteriorBuildingType> {
+  String? _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = ref.read(selectedBuildingTypeProvider);
+  }
+
+  void _handleSelect(String name) {
+    setState(() => _selected = name);
+    ref.read(selectedBuildingTypeProvider.notifier).state = name;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,14 +53,20 @@ class Step2ExteriorBuildingType extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
           child: Row(
             children: [
-              IconButton(icon: const Icon(Icons.arrow_back), onPressed: onBack),
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: widget.onBack,
+              ),
               const Spacer(),
               const Text(
                 'Step 2 / 4',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const Spacer(),
-              IconButton(icon: const Icon(Icons.close), onPressed: onClose),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: widget.onClose,
+              ),
             ],
           ),
         ),
@@ -95,13 +123,24 @@ class Step2ExteriorBuildingType extends StatelessWidget {
               ),
               itemBuilder: (context, index) {
                 final building = buildings[index];
+                final isSelected = _selected == building['name'];
+
                 return GestureDetector(
-                  onTap: () {}, // You can handle selection logic here
+                  onTap: () => _handleSelect(building['name'] as String),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF6F6F6),
+                      color:
+                          isSelected
+                              ? Colors.redAccent.withOpacity(0.1)
+                              : const Color(0xFFF6F6F6),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(
+                        color:
+                            isSelected
+                                ? Colors.redAccent
+                                : Colors.grey.shade300,
+                        width: isSelected ? 2 : 1,
+                      ),
                     ),
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -110,7 +149,7 @@ class Step2ExteriorBuildingType extends StatelessWidget {
                         Icon(
                           building['icon'] as IconData,
                           size: 40,
-                          color: Colors.redAccent,
+                          color: isSelected ? Colors.redAccent : Colors.black54,
                         ),
                         const SizedBox(height: 10),
                         Text(
@@ -133,7 +172,7 @@ class Step2ExteriorBuildingType extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(
-            onPressed: onContinue,
+            onPressed: _selected != null ? widget.onContinue : null,
             style: ElevatedButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
               backgroundColor: Colors.redAccent,

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -33,6 +35,36 @@ class AiDesignUploader {
       print('✅ Design saved to Supabase.');
     } catch (e) {
       print('❌ Failed to save design: $e');
+    }
+  }
+
+  Future<Map<String, String>?> uploadImageToSupabase(File image) async {
+    try {
+      final supabase = Supabase.instance.client;
+      final bytes = await image.readAsBytes();
+      final fileName = 'exterior_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final filePath = 'uploads/exterior/$fileName';
+
+      print('📤 Uploading $filePath to Supabase...');
+
+      final response = await supabase.storage
+          .from('temp-image') // 🔁 Replace with your actual bucket name
+          .uploadBinary(
+            filePath,
+            bytes,
+            fileOptions: const FileOptions(contentType: 'image/jpeg'),
+          );
+
+      final publicUrl = supabase.storage
+          .from('temp-image') // same bucket name
+          .getPublicUrl(filePath);
+
+      print('✅ Upload successful: $publicUrl');
+
+      return {'publicUrl': publicUrl, 'filePath': filePath};
+    } catch (e) {
+      print('❌ Upload failed: $e');
+      return null;
     }
   }
 }

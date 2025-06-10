@@ -9,6 +9,7 @@ import 'package:interior_designer_jasper/core/providers/replicate_output_parser.
 import 'package:interior_designer_jasper/core/providers/supabase_design_uploader.dart';
 import 'package:interior_designer_jasper/core/utils/supabase_image_uploader.dart';
 import 'package:interior_designer_jasper/features/create/viewmodel/create_form_notifier.dart';
+import 'package:interior_designer_jasper/features/exterior_design/providers/exterior_providers.dart';
 
 class AiDesignGenerator {
   final Ref ref;
@@ -80,6 +81,77 @@ class AiDesignGenerator {
       _showSnackBar('Unexpected error: $e');
       return null;
     }
+  }
+
+  Future<String?> generateFromExteriorForm() async {
+    final image = ref.read(selectedExteriorImageProvider);
+    final style = ref.read(selectedExteriorStyleProvider);
+    final palette = ref.read(selectedPaletteProvider);
+
+    if (image == null) {
+      _showSnackBar('❌ Please select an image.');
+      return null;
+    }
+    if (style == null || palette == null) {
+      _showSnackBar('❌ Please complete all selections.');
+      return null;
+    }
+
+    final prompt =
+        "Design a modern exterior in '$style' style with a '$palette' color palette.";
+    print('🧠 Prompt: $prompt');
+
+    // Step 1: Upload original image to Supabase
+    final uploader = ref.read(aiDesignUploaderProvider);
+    _showSnackBar('📤 Uploading image...');
+    final uploadResult = await uploader.uploadImageToSupabase(image);
+    if (uploadResult == null) {
+      _showSnackBar('❌ Upload failed.');
+      return null;
+    }
+
+    final imageUrl = uploadResult['publicUrl']!;
+    final filePath = uploadResult['filePath']!;
+    print('✅ Image URL: $imageUrl');
+
+    // Step 2: Generate design via Replicate
+    _showSnackBar('🤖 Generating AI design...');
+    final response = await ref
+        .read(aiPromptSenderProvider.notifier)
+        .send(filePath: filePath, imageUrl: imageUrl, prompt: prompt);
+
+    if (response == null) {
+      _showSnackBar('❌ AI failed to respond.');
+      return null;
+    }
+
+    final replicateUrl = ref.read(replicateOutputParserProvider)(response.body);
+    if (replicateUrl == null) {
+      _showSnackBar('❌ AI returned no image.');
+      return null;
+    }
+    print('🖼️ Replicate URL: $replicateUrl');
+
+    // Step 3: Re-upload to your Supabase bucket via Edge Function
+    _showSnackBar('🔁 Uploading result to Supabase...');
+    final finalUrl = await ref
+        .read(replicateImageUploaderProvider.notifier)
+        .upload(replicateUrl);
+
+    if (finalUrl == null) {
+      _showSnackBar('❌ Failed to upload AI result.');
+      return null;
+    }
+    print('📦 Final Supabase URL: $finalUrl');
+
+    // Step 4: Save to DB
+    _showSnackBar('💾 Saving design to database...');
+    await ref
+        .read(aiDesignDbUploaderProvider)
+        .insertDesign(prompt: prompt, imageUrl: imageUrl, outputUrl: finalUrl);
+
+    _showSnackBar('🎉 Design saved successfully!');
+    return finalUrl;
   }
 
   /// ✅ Now returns the final output image URL from Replicate

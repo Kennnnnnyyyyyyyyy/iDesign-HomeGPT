@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interior_designer_jasper/features/exterior_design/providers/exterior_providers.dart'; // Adjust path as needed
 
-class Step3ExteriorStyle extends StatelessWidget {
+class Step3ExteriorStyle extends ConsumerStatefulWidget {
   final VoidCallback onContinue;
   final VoidCallback onBack;
   final VoidCallback onClose;
@@ -11,6 +13,24 @@ class Step3ExteriorStyle extends StatelessWidget {
     required this.onBack,
     required this.onClose,
   });
+
+  @override
+  ConsumerState<Step3ExteriorStyle> createState() => _Step3ExteriorStyleState();
+}
+
+class _Step3ExteriorStyleState extends ConsumerState<Step3ExteriorStyle> {
+  String? _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = ref.read(selectedExteriorStyleProvider);
+  }
+
+  void _handleSelect(String name) {
+    setState(() => _selected = name);
+    ref.read(selectedExteriorStyleProvider.notifier).state = name;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,14 +54,20 @@ class Step3ExteriorStyle extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
           child: Row(
             children: [
-              IconButton(icon: const Icon(Icons.arrow_back), onPressed: onBack),
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: widget.onBack,
+              ),
               const Spacer(),
               const Text(
                 'Step 3 / 4',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const Spacer(),
-              IconButton(icon: const Icon(Icons.close), onPressed: onClose),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: widget.onClose,
+              ),
             ],
           ),
         ),
@@ -84,7 +110,7 @@ class Step3ExteriorStyle extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // Style Grid using Icons
+        // Grid
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -98,28 +124,41 @@ class Step3ExteriorStyle extends StatelessWidget {
               ),
               itemBuilder: (context, index) {
                 final style = styles[index];
-                return Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF4F4F4),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        style['icon'] as IconData,
-                        size: 36,
-                        color: Colors.redAccent,
+                final isSelected = _selected == style['name'];
+                return GestureDetector(
+                  onTap: () => _handleSelect(style['name'] as String),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color:
+                          isSelected
+                              ? Colors.redAccent.withOpacity(0.1)
+                              : const Color(0xFFF4F4F4),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color:
+                            isSelected
+                                ? Colors.redAccent
+                                : Colors.grey.shade300,
+                        width: isSelected ? 2 : 1,
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        style['name'] as String,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ],
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          style['icon'] as IconData,
+                          size: 36,
+                          color: isSelected ? Colors.redAccent : Colors.black54,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          style['name'] as String,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -130,7 +169,7 @@ class Step3ExteriorStyle extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(
-            onPressed: onContinue,
+            onPressed: _selected != null ? widget.onContinue : null,
             style: ElevatedButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
               backgroundColor: Colors.redAccent,

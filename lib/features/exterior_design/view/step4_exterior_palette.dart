@@ -1,15 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interior_designer_jasper/features/exterior_design/providers/exterior_providers.dart'; // adjust path as needed
 
-class Step4ExteriorPalette extends StatelessWidget {
+class Step4ExteriorPalette extends ConsumerStatefulWidget {
   final VoidCallback onBack;
   final VoidCallback onSubmit;
+  final VoidCallback onClose;
 
   const Step4ExteriorPalette({
     super.key,
     required this.onBack,
     required this.onSubmit,
-    required void Function() onClose,
+    required this.onClose,
   });
+
+  @override
+  ConsumerState<Step4ExteriorPalette> createState() =>
+      _Step4ExteriorPaletteState();
+}
+
+class _Step4ExteriorPaletteState extends ConsumerState<Step4ExteriorPalette> {
+  String? _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = ref.read(selectedPaletteProvider);
+  }
+
+  void _handleSelect(String name) {
+    setState(() => _selected = name);
+    ref.read(selectedPaletteProvider.notifier).state = name;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +66,10 @@ class Step4ExteriorPalette extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
           child: Row(
             children: [
-              IconButton(onPressed: onBack, icon: const Icon(Icons.arrow_back)),
+              IconButton(
+                onPressed: widget.onBack,
+                icon: const Icon(Icons.arrow_back),
+              ),
               const Spacer(),
               const Text(
                 'Step 4 / 4',
@@ -53,7 +78,7 @@ class Step4ExteriorPalette extends StatelessWidget {
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => widget.onClose(),
               ),
             ],
           ),
@@ -111,56 +136,67 @@ class Step4ExteriorPalette extends StatelessWidget {
               ),
               itemBuilder: (context, index) {
                 final palette = palettes[index];
-                return Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children:
-                              (palette['colors'] as List<Color>).map((color) {
-                                return Expanded(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: color,
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(
-                                          (palette['colors']
-                                                      as List<Color>)[0] ==
-                                                  color
-                                              ? 16
-                                              : 0,
-                                        ),
-                                        topRight: Radius.circular(
-                                          (palette['colors'] as List<Color>)
-                                                      .last ==
-                                                  color
-                                              ? 16
-                                              : 0,
+                final isSelected = _selected == palette['name'];
+
+                return GestureDetector(
+                  onTap: () => _handleSelect(palette['name'] as String),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color:
+                            isSelected
+                                ? Colors.redAccent
+                                : Colors.grey.shade300,
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children:
+                                (palette['colors'] as List<Color>).map((color) {
+                                  return Expanded(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: color,
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(
+                                            (palette['colors']
+                                                        as List<Color>)[0] ==
+                                                    color
+                                                ? 16
+                                                : 0,
+                                          ),
+                                          topRight: Radius.circular(
+                                            (palette['colors'] as List<Color>)
+                                                        .last ==
+                                                    color
+                                                ? 16
+                                                : 0,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                );
-                              }).toList(),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Text(
-                          palette['name'] as String,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
+                                  );
+                                }).toList(),
                           ),
                         ),
-                      ),
-                    ],
+                        Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Text(
+                            palette['name'] as String,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -171,7 +207,7 @@ class Step4ExteriorPalette extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(
-            onPressed: onSubmit,
+            onPressed: _selected != null ? widget.onSubmit : null,
             style: ElevatedButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
               backgroundColor: Colors.redAccent,
