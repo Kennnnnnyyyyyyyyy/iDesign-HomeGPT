@@ -33,3 +33,8 @@ class ReplaceObjectNotifier extends AsyncNotifier<void> {
     }
   }
 }
+
+final replaceObjectNotifierProvider =
+    AsyncNotifierProvider<ReplaceObjectNotifier, void>(
+      ReplaceObjectNotifier.new,
+    );
