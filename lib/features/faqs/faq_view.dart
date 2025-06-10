@@ -9,9 +9,9 @@ class FAQPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final faqs = [
       {
-        'question': 'How does Jasper HomeAI work?',
+        'question': 'How does HomeGPT - AI Home Interior work?',
         'answer':
-            'Jasper HomeAI uses AI to redesign interiors and exteriors based on your preferences, styles, and photos you upload.',
+            'HomeGPT uses AI to redesign interiors and exteriors based on your preferences, styles, and the photos you upload.',
       },
       {
         'question': 'Is my data stored or shared?',
@@ -41,8 +41,7 @@ class FAQPage extends StatelessWidget {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed:
-              () => context.goNamed(RouterConstants.settings), // 👈 Go to Home
+          onPressed: () => context.goNamed(RouterConstants.settings),
         ),
         title: const Text('FAQs', style: TextStyle(color: Colors.black)),
       ),

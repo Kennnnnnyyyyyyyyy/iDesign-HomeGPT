@@ -3,10 +3,27 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
-import 'package:interior_designer_jasper/features/auth/providers/auth_provider.dart'; // For supabaseProvider
+import 'package:interior_designer_jasper/features/auth/providers/auth_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
+
+  Future<void> _launchEmail(BuildContext context) async {
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'sales@yiinternational.org',
+      query: Uri.encodeFull('subject=Feedback for HomeGPT&body=Hi team,'),
+    );
+
+    if (await canLaunchUrl(emailLaunchUri)) {
+      await launchUrl(emailLaunchUri);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open email app.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -16,8 +33,8 @@ class SettingsPage extends ConsumerWidget {
     final List<_SettingItem> settings = [
       _SettingItem(Icons.send, 'Feedback'),
       _SettingItem(Icons.help_outline, 'FAQ'),
-      _SettingItem(Icons.star_border, 'Rate Us'),
-      _SettingItem(Icons.share_outlined, 'Share with Friends'),
+      // _SettingItem(Icons.star_border, 'Rate Us'),
+      // _SettingItem(Icons.share_outlined, 'Share with Friends'),
       _SettingItem(Icons.article_outlined, 'Terms of Use'),
       _SettingItem(Icons.shield_outlined, 'Privacy Policy'),
       _SettingItem(Icons.restore, 'Restore Purchase'),
@@ -46,6 +63,9 @@ class SettingsPage extends ConsumerWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   switch (item.title) {
+                    case 'Feedback':
+                      _launchEmail(context);
+                      break;
                     case 'FAQ':
                       context.goNamed(RouterConstants.faqs);
                       break;

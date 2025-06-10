@@ -29,7 +29,7 @@ class TermsOfServicePage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Welcome to Jasper HomeAI!',
+                'Welcome to HomeGPT - AI Home Interior!',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 12),
@@ -52,7 +52,7 @@ class TermsOfServicePage extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(
-                'All content and assets in this app are the property of Jasper HomeAI and its creators unless stated otherwise.',
+                'All content and assets in this app are the property of HomeGPT - AI Home Interior and its creators unless stated otherwise.',
               ),
               SizedBox(height: 12),
               Text(

@@ -1,18 +1,53 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
 
-class PaywallPage extends StatelessWidget {
+class PaywallPage extends StatefulWidget {
   const PaywallPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final images = [
-      'assets/create/br1.jpeg',
-      'assets/create/br2.jpeg',
-      'assets/create/br3.jpeg',
-    ];
+  State<PaywallPage> createState() => _PaywallPageState();
+}
 
+class _PaywallPageState extends State<PaywallPage> {
+  final PageController _pageController = PageController(viewportFraction: 0.8);
+  final List<String> images = [
+    'assets/create/br1.jpeg',
+    'assets/create/br2.jpeg',
+    'assets/create/br3.jpeg',
+  ];
+
+  late Timer _timer;
+  int _currentPage = 0;
+
+  bool _isTrialEnabled = true;
+  String _selectedPlan = 'yearly';
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (_pageController.hasClients) {
+        _currentPage = (_currentPage + 1) % images.length;
+        _pageController.animateToPage(
+          _currentPage,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -22,7 +57,7 @@ class PaywallPage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const SizedBox(width: 50), // spacing
+                const SizedBox(width: 50),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.white),
@@ -31,11 +66,11 @@ class PaywallPage extends StatelessWidget {
               ],
             ),
 
-            /// Image carousel with side peeks
+            /// Image carousel with auto-scroll
             SizedBox(
               height: 240,
               child: PageView.builder(
-                controller: PageController(viewportFraction: 0.8),
+                controller: _pageController,
                 itemCount: images.length,
                 itemBuilder: (context, index) {
                   return Padding(
@@ -75,8 +110,12 @@ class PaywallPage extends StatelessWidget {
                     style: TextStyle(color: Colors.white),
                   ),
                   Switch(
-                    value: true,
-                    onChanged: (_) {},
+                    value: _isTrialEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        _isTrialEnabled = value;
+                      });
+                    },
                     activeColor: Colors.red,
                   ),
                 ],
@@ -84,22 +123,36 @@ class PaywallPage extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            /// Plan options
-            _PlanCard(
-              title: "YEARLY ACCESS",
-              subtitle: "Just \$49.97 per year",
-              price: "\$0.97",
-              highlight: true,
-              weekly: true,
-              bestOffer: true,
+            /// Plan options with selection
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedPlan = 'yearly';
+                });
+              },
+              child: _PlanCard(
+                title: "YEARLY ACCESS",
+                subtitle: "Just \$49.97 per year",
+                price: "\$0.97",
+                highlight: _selectedPlan == 'yearly',
+                weekly: true,
+                bestOffer: true,
+              ),
             ),
             const SizedBox(height: 12),
-            _PlanCard(
-              title: "WEEKLY ACCESS",
-              subtitle: "Pay as you go",
-              price: "\$11.97",
-              highlight: false,
-              weekly: true,
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedPlan = 'weekly';
+                });
+              },
+              child: _PlanCard(
+                title: "WEEKLY ACCESS",
+                subtitle: "Pay as you go",
+                price: "\$11.97",
+                highlight: _selectedPlan == 'weekly',
+                weekly: true,
+              ),
             ),
             const Spacer(),
 
@@ -120,7 +173,13 @@ class PaywallPage extends StatelessWidget {
                   ),
                 ),
                 onPressed: () {
-                  // Add subscription logic here
+                  final message =
+                      _isTrialEnabled
+                          ? 'Free Trial Activated for $_selectedPlan Plan'
+                          : 'Subscribed to $_selectedPlan Plan';
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(message)));
                 },
                 child: const Text(
                   "Continue",
