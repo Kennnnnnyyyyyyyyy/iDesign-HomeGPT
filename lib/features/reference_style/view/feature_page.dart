@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interior_designer_jasper/features/reference_style/view_model/reference_style_notifier.dart';
 import 'step1_add_room_photo.dart';
 import 'step2_add_reference_photo.dart';
 
-class ReferenceStylePage extends StatefulWidget {
+class ReferenceStylePage extends ConsumerStatefulWidget {
   const ReferenceStylePage({super.key});
 
   @override
-  State<ReferenceStylePage> createState() => _ReferenceStylePageState();
+  ConsumerState<ReferenceStylePage> createState() => _ReferenceStylePageState();
 }
 
-class _ReferenceStylePageState extends State<ReferenceStylePage> {
+class _ReferenceStylePageState extends ConsumerState<ReferenceStylePage> {
   int _currentStep = 0;
 
   void _nextStep() {
@@ -25,15 +27,26 @@ class _ReferenceStylePageState extends State<ReferenceStylePage> {
     }
   }
 
+  Future<void> _submitStyleTransfer() async {
+    final notifier = ref.read(referenceStyleNotifierProvider.notifier);
+    await notifier.submitReferenceStyle();
+
+    final result = ref.read(referenceStyleNotifierProvider);
+    result.whenOrNull(
+      error:
+          (e, _) => ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: $e'))),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final steps = [
       Step1AddRoomPhoto(onContinue: _nextStep),
       Step2AddReferencePhoto(
         onBack: _prevStep,
-        onContinue: () {
-          // TODO: Handle final submission / generation
-        },
+        onContinue: _submitStyleTransfer,
       ),
     ];
 
@@ -42,39 +55,6 @@ class _ReferenceStylePageState extends State<ReferenceStylePage> {
       body: SafeArea(
         child: Column(
           children: [
-            // AppBar Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  if (_currentStep > 0)
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: _prevStep,
-                    )
-                  else
-                    const SizedBox(width: 48), // Reserve space
-
-                  const Spacer(),
-                  Text(
-                    'Reference Style (${_currentStep + 1} / 2)',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () {
-                      context.goNamed('home'); // ⬅️ Adjust if named differently
-                    },
-                  ),
-                ],
-              ),
-            ),
-
             // Progress Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),

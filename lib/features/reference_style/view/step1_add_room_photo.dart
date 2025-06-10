@@ -1,9 +1,98 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:interior_designer_jasper/features/reference_style/view_model/reference_style_notifier.dart';
+import 'package:interior_designer_jasper/routes/router_constants.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_router/go_router.dart';
 
-class Step1AddRoomPhoto extends StatelessWidget {
+class Step1AddRoomPhoto extends ConsumerStatefulWidget {
   final VoidCallback onContinue;
 
   const Step1AddRoomPhoto({super.key, required this.onContinue});
+
+  @override
+  ConsumerState<Step1AddRoomPhoto> createState() => _Step1AddRoomPhotoState();
+}
+
+class _Step1AddRoomPhotoState extends ConsumerState<Step1AddRoomPhoto> {
+  File? _selectedImageFile;
+  String? _selectedAssetPath;
+  bool _isUploading = false;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+
+    if (picked == null) return;
+
+    setState(() {
+      _selectedImageFile = File(picked.path);
+      _selectedAssetPath = null; // Clear asset selection if a file is picked
+    });
+  }
+
+  void _selectExampleAsset(String assetPath) {
+    setState(() {
+      _selectedImageFile = null;
+      _selectedAssetPath = assetPath;
+    });
+  }
+
+  Future<void> _uploadSelectedImageAndContinue() async {
+    if (_selectedImageFile == null && _selectedAssetPath == null) return;
+
+    setState(() => _isUploading = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+      final storageRef = supabase.storage.from('temp-image');
+
+      late File fileToUpload;
+      late String fileName;
+
+      if (_selectedImageFile != null) {
+        fileToUpload = _selectedImageFile!;
+        fileName = 'room_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      } else {
+        // Load asset as bytes, write to temp file
+        final byteData = await rootBundle.load(_selectedAssetPath!);
+        final tempDir = Directory.systemTemp;
+        fileToUpload = File(
+          '${tempDir.path}/room_example_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        );
+        await fileToUpload.writeAsBytes(byteData.buffer.asUint8List());
+
+        fileName = 'room_example_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      }
+
+      final filePath = 'uploads/$fileName';
+      await storageRef.upload(
+        filePath,
+        fileToUpload,
+        fileOptions: const FileOptions(upsert: true),
+      );
+      final publicUrl = storageRef.getPublicUrl(filePath);
+
+      // Set in ViewModel
+      ref
+          .read(referenceStyleNotifierProvider.notifier)
+          .setRoomPhotoUrl(publicUrl);
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('✅ Room photo uploaded')));
+      widget.onContinue();
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('❌ Upload failed: $e')));
+    } finally {
+      setState(() => _isUploading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,6 +102,9 @@ class Step1AddRoomPhoto extends StatelessWidget {
       'assets/create/br3.jpeg',
       'assets/create/br4.jpeg',
     ];
+
+    final hasSelection =
+        _selectedImageFile != null || _selectedAssetPath != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +144,7 @@ class Step1AddRoomPhoto extends StatelessWidget {
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => context.goNamed(RouterConstants.home),
               ),
             ],
           ),
@@ -76,28 +168,38 @@ class Step1AddRoomPhoto extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Take a picture of your current room.\nFor best results, make sure the photo depicts the layout and key details clearly.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.black54),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: null, // 🔧 TODO: Hook up image picker
-                    icon: Icon(Icons.add),
-                    label: Text('Add a Photo'),
+            child: Builder(
+              builder: (_) {
+                if (_selectedImageFile != null) {
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.file(
+                      _selectedImageFile!,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                    ),
+                  );
+                } else if (_selectedAssetPath != null) {
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      _selectedAssetPath!,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                    ),
+                  );
+                } else {
+                  return ElevatedButton.icon(
+                    onPressed: _isUploading ? null : _pickImage,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add a Photo'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
                       foregroundColor: Colors.white,
                     ),
-                  ),
-                ],
-              ),
+                  );
+                }
+              },
             ),
           ),
         ),
@@ -122,13 +224,17 @@ class Step1AddRoomPhoto extends StatelessWidget {
             itemCount: exampleImages.length,
             separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
-              return ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  exampleImages[index],
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.cover,
+              final assetPath = exampleImages[index];
+              return GestureDetector(
+                onTap: () => _selectExampleAsset(assetPath),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    assetPath,
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               );
             },
@@ -140,7 +246,10 @@ class Step1AddRoomPhoto extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(
-            onPressed: onContinue,
+            onPressed:
+                hasSelection && !_isUploading
+                    ? _uploadSelectedImageAndContinue
+                    : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
@@ -149,7 +258,10 @@ class Step1AddRoomPhoto extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
-            child: const Text('Continue', style: TextStyle(fontSize: 18)),
+            child:
+                _isUploading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Continue', style: TextStyle(fontSize: 18)),
           ),
         ),
       ],
