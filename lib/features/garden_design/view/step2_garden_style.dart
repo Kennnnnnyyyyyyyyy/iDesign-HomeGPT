@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interior_designer_jasper/features/garden_design/providers/garden_providers.dart';
+import 'package:interior_designer_jasper/features/garden_design/view_model/garden_design_notifier.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
 
-class Step2GardenStyle extends StatelessWidget {
+class Step2GardenStyle extends ConsumerWidget {
   final VoidCallback onContinue;
   final VoidCallback onBack;
 
@@ -13,7 +16,8 @@ class Step2GardenStyle extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedStyle = ref.watch(selectedGardenStyleProvider);
     final styles = [
       {'name': 'Modern', 'icon': Icons.chair_alt},
       {'name': 'Tropical', 'icon': Icons.park},
@@ -26,7 +30,7 @@ class Step2GardenStyle extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Step Header
+        // Header
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
           child: Row(
@@ -84,7 +88,7 @@ class Step2GardenStyle extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // Style Grid (Icon-based temporarily)
+        // Style Grid
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -98,28 +102,49 @@ class Step2GardenStyle extends StatelessWidget {
               ),
               itemBuilder: (context, index) {
                 final style = styles[index];
-                return Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F6FA),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        style['icon'] as IconData,
-                        size: 40,
-                        color: Colors.green,
+                final isSelected = style['name'] == selectedStyle;
+
+                return GestureDetector(
+                  onTap: () {
+                    final styleName = style['name'] as String;
+                    ref.read(selectedGardenStyleProvider.notifier).state =
+                        styleName;
+                    ref
+                        .read(gardenDesignProvider.notifier)
+                        .setStyle(styleName); // ✅ global state update
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color:
+                          isSelected
+                              ? Colors.redAccent.withOpacity(0.15)
+                              : const Color(0xFFF5F6FA),
+                      border: Border.all(
+                        color:
+                            isSelected ? Colors.redAccent : Colors.transparent,
+                        width: 2,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        style['name']! as String,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          style['icon'] as IconData,
+                          size: 40,
+                          color: Colors.green,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(
+                          style['name'] as String,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: isSelected ? Colors.redAccent : Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -130,7 +155,7 @@ class Step2GardenStyle extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(
-            onPressed: onContinue,
+            onPressed: selectedStyle != null ? onContinue : null,
             style: ElevatedButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
               backgroundColor: Colors.redAccent,

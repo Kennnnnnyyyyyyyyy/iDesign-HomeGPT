@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interior_designer_jasper/features/garden_design/providers/garden_providers.dart';
+import 'package:interior_designer_jasper/features/garden_design/view_model/garden_design_notifier.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
 
-class Step3GardenPalette extends StatelessWidget {
+class Step3GardenPalette extends ConsumerWidget {
   final VoidCallback onBack;
-  final VoidCallback onContinue;
 
-  const Step3GardenPalette({
-    super.key,
-    required this.onBack,
-    required this.onContinue,
-  });
+  const Step3GardenPalette({super.key, required this.onBack});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedPalette = ref.watch(selectedGardenPaletteProvider);
+
     final palettes = [
       {
         'name': 'Surprise Me',
@@ -163,38 +163,52 @@ class Step3GardenPalette extends StatelessWidget {
               ),
               itemBuilder: (context, index) {
                 final palette = palettes[index];
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children:
-                              (palette['colors'] as List<Color>).map((color) {
-                                return Expanded(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: color,
-                                      borderRadius: BorderRadius.circular(2),
+                final isSelected = selectedPalette == palette['name'];
+
+                return GestureDetector(
+                  onTap: () {
+                    ref.read(selectedGardenPaletteProvider.notifier).state =
+                        palette['name'] as String;
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(
+                        color:
+                            isSelected
+                                ? Colors.redAccent
+                                : Colors.grey.shade300,
+                        width: isSelected ? 2 : 1,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children:
+                                (palette['colors'] as List<Color>).map((color) {
+                                  return Expanded(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: color,
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
                                     ),
-                                  ),
-                                );
-                              }).toList(),
+                                  );
+                                }).toList(),
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Text(
-                          palette['name'] as String,
-                          style: const TextStyle(fontSize: 13),
-                          textAlign: TextAlign.center,
+                        Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Text(
+                            palette['name'] as String,
+                            style: const TextStyle(fontSize: 13),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
@@ -205,7 +219,39 @@ class Step3GardenPalette extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(
-            onPressed: onContinue,
+            onPressed:
+                selectedPalette != null
+                    ? () async {
+                      final notifier = ref.read(gardenDesignProvider.notifier);
+                      notifier.setPalette(selectedPalette);
+
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder:
+                            (_) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                      );
+
+                      final outputUrl = await notifier.generateDesign();
+
+                      if (context.mounted) Navigator.pop(context);
+
+                      if (outputUrl != null && context.mounted) {
+                        context.pushNamed(
+                          RouterConstants.aiResult,
+                          extra: outputUrl,
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Failed to generate design.'),
+                          ),
+                        );
+                      }
+                    }
+                    : null,
             style: ElevatedButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
               backgroundColor: Colors.redAccent,
