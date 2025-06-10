@@ -53,6 +53,7 @@ dependencies:
   image_gallery_saver: ^2.0.3
   image: ^4.5.4
   image_painter: ^0.7.1
+  flutter_colorpicker: ^1.1.0
 
 dev_dependencies:
   flutter_test:

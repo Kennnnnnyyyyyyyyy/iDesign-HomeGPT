@@ -8,7 +8,7 @@ import 'package:interior_designer_jasper/features/exterior_design/view/feature_p
 import 'package:interior_designer_jasper/features/faqs/faq_view.dart';
 import 'package:interior_designer_jasper/features/garden_design/view/feature_page.dart';
 import 'package:interior_designer_jasper/features/home/view/home_page.dart';
-import 'package:interior_designer_jasper/features/paint_visualisation/view/feature_page.dart';
+import 'package:interior_designer_jasper/features/paint_visualisation/view/paint_feature_page.dart';
 import 'package:interior_designer_jasper/features/paywall/view/paywall.dart';
 import 'package:interior_designer_jasper/features/privacy_policy/privacy_policy.dart';
 import 'package:interior_designer_jasper/features/profile/view/profile_page.dart';
