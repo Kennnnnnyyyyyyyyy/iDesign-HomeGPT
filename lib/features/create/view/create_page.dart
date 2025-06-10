@@ -20,6 +20,7 @@ class CreatePage extends ConsumerStatefulWidget {
 
 class _CreatePageState extends ConsumerState<CreatePage> {
   int _currentStep = 0;
+  bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage() async {
@@ -37,43 +38,39 @@ class _CreatePageState extends ConsumerState<CreatePage> {
     final form = ref.read(createFormProvider);
 
     if (_currentStep == 0 && form.image == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a photo to continue.')),
-      );
+      _showError('Please select a photo to continue.');
       return;
     }
-
     if (_currentStep == 1 && form.room.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a room to continue.')),
-      );
+      _showError('Please select a room to continue.');
       return;
     }
-
     if (_currentStep == 2 && form.style.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a style to continue.')),
-      );
+      _showError('Please select a style to continue.');
       return;
     }
-
     if (_currentStep == 3 && form.palette.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a palette to continue.')),
-      );
+      _showError('Please select a palette to continue.');
       return;
     }
 
     if (_currentStep < 3) {
       setState(() => _currentStep++);
     } else {
+      setState(() => _isLoading = true);
       final finalUrl = await ref.read(aiPipelineProvider(context)).execute();
-      if (finalUrl != null) {
-        if (context.mounted) {
-          context.goNamed(RouterConstants.aiResult, extra: finalUrl);
-        }
+      setState(() => _isLoading = false);
+
+      if (finalUrl != null && mounted) {
+        context.goNamed(RouterConstants.aiResult, extra: finalUrl);
       }
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _prevStep() {
@@ -109,75 +106,86 @@ class _CreatePageState extends ConsumerState<CreatePage> {
     ];
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            /// Step Header AppBar-style
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  // Back button (only if not on step 0)
-                  if (_currentStep > 0)
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: _prevStep,
-                    )
-                  else
-                    const SizedBox(width: 48), // To align with close button
-                  // Step indicator
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        "Step ${_currentStep + 1} of ${steps.length}",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      if (_currentStep > 0)
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: _prevStep,
+                        )
+                      else
+                        const SizedBox(width: 48),
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            "Step ${_currentStep + 1} of ${steps.length}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
                       ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => context.goNamed(RouterConstants.home),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Main Step Widget
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: steps[_currentStep],
+                  ),
+                ),
+
+                // Continue Button
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _nextStep,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: Text(
+                      _currentStep < steps.length - 1
+                          ? 'Continue'
+                          : 'Generate Design',
+                      style: const TextStyle(fontSize: 18),
                     ),
                   ),
-
-                  // Close button
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => context.goNamed(RouterConstants.home),
-                  ),
-                ],
-              ),
-            ),
-
-            /// Main Step Content
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: steps[_currentStep],
-              ),
-            ),
-
-            /// Continue / Generate Button
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: ElevatedButton(
-                onPressed: _nextStep,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
                 ),
-                child: Text(
-                  _currentStep < steps.length - 1
-                      ? 'Continue'
-                      : 'Generate Design',
-                  style: const TextStyle(fontSize: 18),
-                ),
+              ],
+            ),
+          ),
+
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.4),
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.white),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
