@@ -86,9 +86,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               itemBuilder: (context, index) {
                 final design = designs[index];
                 return _buildBoardCard(
-                  imageUrl: design['output_url'],
+                  imageUrl: design['output_url'] ?? '',
                   prompt: design['prompt'] ?? '',
-                  designId: design['id'] ?? '',
+                  designId: (design['id'] ?? '').toString(),
                 );
               },
             ),

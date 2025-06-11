@@ -11,10 +11,11 @@ class ReplaceObjectPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final exampleImages = [
-      'assets/create/br1.jpeg',
-      'assets/create/br2.jpeg',
-      'assets/create/br3.jpeg',
-      'assets/create/br4.jpeg',
+      'assets/create/ro1.jpeg',
+      'assets/create/ro2.jpeg',
+      'assets/create/ro3.jpeg',
+      'assets/create/ro4.jpeg',
+      'assets/create/ro5.jpeg',
     ];
 
     return Scaffold(

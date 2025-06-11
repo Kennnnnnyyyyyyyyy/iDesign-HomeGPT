@@ -132,8 +132,8 @@ class _PaywallPageState extends State<PaywallPage> {
               },
               child: _PlanCard(
                 title: "YEARLY ACCESS",
-                subtitle: "Just \$49.97 per year",
-                price: "\$0.97",
+                subtitle: "Just \$49.99 per year",
+                price: "\$0.99",
                 highlight: _selectedPlan == 'yearly',
                 weekly: true,
                 bestOffer: true,
@@ -149,7 +149,7 @@ class _PaywallPageState extends State<PaywallPage> {
               child: _PlanCard(
                 title: "WEEKLY ACCESS",
                 subtitle: "Pay as you go",
-                price: "\$11.97",
+                price: "\$12.99",
                 highlight: _selectedPlan == 'weekly',
                 weekly: true,
               ),

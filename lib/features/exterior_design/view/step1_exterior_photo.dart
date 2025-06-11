@@ -23,10 +23,10 @@ class _Step1ExteriorPhotoState extends ConsumerState<Step1ExteriorPhoto> {
   final picker = ImagePicker();
 
   final exampleImages = [
-    'assets/create/br5.jpeg',
-    'assets/create/br2.jpeg',
-    'assets/create/br3.jpeg',
-    'assets/create/br4.jpeg',
+    'assets/create/ext1.jpeg',
+    'assets/create/ext2.jpeg',
+    'assets/create/ext3.jpeg',
+    'assets/create/ext4.jpeg',
   ];
 
   Future<void> _pickFromGallery() async {

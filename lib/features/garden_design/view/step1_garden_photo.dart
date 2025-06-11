@@ -45,10 +45,11 @@ class _Step1GardenPhotoState extends ConsumerState<Step1GardenPhoto> {
   @override
   Widget build(BuildContext context) {
     final exampleImages = [
-      'assets/create/br1.jpeg',
-      'assets/create/br2.jpeg',
-      'assets/create/br3.jpeg',
-      'assets/create/br4.jpeg',
+      'assets/create/gr1.jpeg',
+      'assets/create/gr2.jpeg',
+      'assets/create/gr3.jpeg',
+      'assets/create/gr4.jpeg',
+      'assets/create/gr5.jpeg',
     ];
 
     final hasSelection = _selectedImage != null || _selectedAssetPath != null;

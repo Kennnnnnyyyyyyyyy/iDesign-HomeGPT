@@ -18,7 +18,7 @@ class _PaintPageState extends State<PaintPage> {
   final exampleImages = [
     'assets/create/br1.jpeg',
     'assets/create/br2.jpeg',
-    'assets/create/br3.jpeg',
+    'assets/create/ro1.jpeg',
     'assets/create/br4.jpeg',
   ];
 

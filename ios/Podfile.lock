@@ -96,6 +96,14 @@ PODS:
   - permission_handler_apple (9.3.0):
     - Flutter
   - PromisesObjC (2.4.0)
+  - Qonversion (5.13.0):
+    - Qonversion/Main (= 5.13.0)
+  - Qonversion/Main (5.13.0)
+  - qonversion_flutter (5.0.0):
+    - Flutter
+    - QonversionSandwich (= 5.2.0)
+  - QonversionSandwich (5.2.0):
+    - Qonversion (= 5.13.0)
   - RecaptchaInterop (101.0.0)
   - share_plus (0.0.1):
     - Flutter
@@ -117,6 +125,7 @@ DEPENDENCIES:
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+  - qonversion_flutter (from `.symlinks/plugins/qonversion_flutter/ios`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sign_in_with_apple (from `.symlinks/plugins/sign_in_with_apple/ios`)
@@ -138,6 +147,8 @@ SPEC REPOS:
     - GTMAppAuth
     - GTMSessionFetcher
     - PromisesObjC
+    - Qonversion
+    - QonversionSandwich
     - RecaptchaInterop
 
 EXTERNAL SOURCES:
@@ -159,6 +170,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   permission_handler_apple:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
+  qonversion_flutter:
+    :path: ".symlinks/plugins/qonversion_flutter/ios"
   share_plus:
     :path: ".symlinks/plugins/share_plus/ios"
   shared_preferences_foundation:
@@ -192,6 +205,9 @@ SPEC CHECKSUMS:
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
+  Qonversion: 37addeba74c5b328de9e1173b580c971b6d764ec
+  qonversion_flutter: 608eefd2a4c33a9f8d508be134967f63c38a5bcc
+  QonversionSandwich: 3ffa118b7214ebd2dcd3f3a1a0a33a39f9c48c8e
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
   share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7

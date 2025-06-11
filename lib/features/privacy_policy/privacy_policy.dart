@@ -16,7 +16,7 @@ class PrivacyPolicyPage extends StatelessWidget {
     if (await canLaunchUrl(emailUri)) {
       await launchUrl(emailUri);
     } else {
-      // fallback if no mail app
+      // fallback if no mail appS
       throw 'Could not launch email client.';
     }
   }

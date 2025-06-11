@@ -17,14 +17,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     super.initState();
 
     Future.delayed(const Duration(seconds: 2), () async {
-      await ref.read(authNotifierProvider.notifier).signInAnonymously();
+      try {
+        final uid = await ref.read(authNotifierProvider.future);
 
-      final user = ref.read(supabaseProvider).auth.currentUser;
-      if (user != null) {
+        // ✅ Successful
         context.goNamed(RouterConstants.home);
-      } else {
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('❌ Anonymous sign-in failed')),
+          SnackBar(content: Text('❌ Anonymous sign-in failed: $e')),
         );
       }
     });
