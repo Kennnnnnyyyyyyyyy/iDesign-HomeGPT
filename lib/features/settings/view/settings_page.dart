@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
 import 'package:interior_designer_jasper/features/auth/providers/auth_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:qonversion_flutter/qonversion_flutter.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -25,6 +26,30 @@ class SettingsPage extends ConsumerWidget {
     }
   }
 
+  Future<void> _handleRestore(BuildContext context) async {
+    try {
+      final qonversion = Qonversion.getSharedInstance();
+      final entitlements = await qonversion.restore();
+      final entitlement = entitlements['premium_access_homegpt'];
+
+      if (entitlement?.isActive ?? false) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✅ Purchases successfully restored!')),
+        );
+        context.goNamed(RouterConstants.home);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('❌ No purchases to restore')),
+        );
+      }
+    } catch (e) {
+      print('❌ Restore failed: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('❌ Restore failed: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final supabase = ref.watch(supabaseProvider);
@@ -33,8 +58,6 @@ class SettingsPage extends ConsumerWidget {
     final List<_SettingItem> settings = [
       _SettingItem(Icons.send, 'Feedback'),
       _SettingItem(Icons.help_outline, 'FAQ'),
-      // _SettingItem(Icons.star_border, 'Rate Us'),
-      // _SettingItem(Icons.share_outlined, 'Share with Friends'),
       _SettingItem(Icons.article_outlined, 'Terms of Use'),
       _SettingItem(Icons.shield_outlined, 'Privacy Policy'),
       _SettingItem(Icons.restore, 'Restore Purchase'),
@@ -74,6 +97,9 @@ class SettingsPage extends ConsumerWidget {
                       break;
                     case 'Terms of Use':
                       context.goNamed(RouterConstants.tos);
+                      break;
+                    case 'Restore Purchase':
+                      _handleRestore(context);
                       break;
                     default:
                       ScaffoldMessenger.of(context).showSnackBar(

@@ -16,10 +16,10 @@ class PaintPage extends StatefulWidget {
 
 class _PaintPageState extends State<PaintPage> {
   final exampleImages = [
-    'assets/create/br1.jpeg',
-    'assets/create/br2.jpeg',
-    'assets/create/ro1.jpeg',
-    'assets/create/br4.jpeg',
+    'assets/create/pv1.jpeg',
+    'assets/create/pv2.jpeg',
+    'assets/create/pv3.jpeg',
+    'assets/create/pv4.jpeg',
   ];
 
   Color _selectedColor = Colors.white;

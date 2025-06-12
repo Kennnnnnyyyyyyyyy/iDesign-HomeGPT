@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:interior_designer_jasper/features/exterior_design/providers/exterior_providers.dart'; // adjust path as needed
+import 'package:interior_designer_jasper/core/widgets/palette_card.dart';
+import 'package:interior_designer_jasper/features/exterior_design/providers/exterior_providers.dart';
 
 class Step4ExteriorPalette extends ConsumerStatefulWidget {
   final VoidCallback onBack;
@@ -35,7 +36,8 @@ class _Step4ExteriorPaletteState extends ConsumerState<Step4ExteriorPalette> {
 
   @override
   Widget build(BuildContext context) {
-    final palettes = [
+    // Local palettes for exterior design
+    final exteriorPalettes = [
       {
         'name': 'Terracotta Warmth',
         'colors': [Color(0xFFCC7351), Color(0xFFF4A896), Color(0xFFFFE5D9)],
@@ -61,50 +63,9 @@ class _Step4ExteriorPaletteState extends ConsumerState<Step4ExteriorPalette> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header Row
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: widget.onBack,
-                icon: const Icon(Icons.arrow_back),
-              ),
-              const Spacer(),
-              const Text(
-                'Step 4 / 4',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => widget.onClose(),
-              ),
-            ],
-          ),
-        ),
-
-        // Progress Bar
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: List.generate(4, (index) {
-              return Expanded(
-                child: Container(
-                  height: 4,
-                  margin: EdgeInsets.only(right: index < 3 ? 6 : 0),
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              );
-            }),
-          ),
-        ),
-
+        _buildHeader(),
+        _buildProgressBar(),
         const SizedBox(height: 24),
-
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16),
           child: Text(
@@ -122,12 +83,11 @@ class _Step4ExteriorPaletteState extends ConsumerState<Step4ExteriorPalette> {
         ),
         const SizedBox(height: 16),
 
-        // Palette Grid
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: GridView.builder(
-              itemCount: palettes.length,
+              itemCount: exteriorPalettes.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 crossAxisSpacing: 12,
@@ -135,69 +95,16 @@ class _Step4ExteriorPaletteState extends ConsumerState<Step4ExteriorPalette> {
                 childAspectRatio: 1.4,
               ),
               itemBuilder: (context, index) {
-                final palette = palettes[index];
-                final isSelected = _selected == palette['name'];
+                final palette = exteriorPalettes[index];
+                final name = palette['name'] as String;
+                final colors = palette['colors'] as List<Color>;
+                final isSelected = _selected == name;
 
-                return GestureDetector(
-                  onTap: () => _handleSelect(palette['name'] as String),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color:
-                            isSelected
-                                ? Colors.redAccent
-                                : Colors.grey.shade300,
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children:
-                                (palette['colors'] as List<Color>).map((color) {
-                                  return Expanded(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: color,
-                                        borderRadius: BorderRadius.only(
-                                          topLeft: Radius.circular(
-                                            (palette['colors']
-                                                        as List<Color>)[0] ==
-                                                    color
-                                                ? 16
-                                                : 0,
-                                          ),
-                                          topRight: Radius.circular(
-                                            (palette['colors'] as List<Color>)
-                                                        .last ==
-                                                    color
-                                                ? 16
-                                                : 0,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Text(
-                            palette['name'] as String,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                return PaletteTile(
+                  name: name,
+                  colors: colors,
+                  isSelected: isSelected,
+                  onTap: () => _handleSelect(name),
                 );
               },
             ),
@@ -222,6 +129,47 @@ class _Step4ExteriorPaletteState extends ConsumerState<Step4ExteriorPalette> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: widget.onBack,
+            icon: const Icon(Icons.arrow_back),
+          ),
+          const Spacer(),
+          const Text(
+            'Step 4 / 4',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          const Spacer(),
+          IconButton(icon: const Icon(Icons.close), onPressed: widget.onClose),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: List.generate(4, (index) {
+          return Expanded(
+            child: Container(
+              height: 4,
+              margin: EdgeInsets.only(right: index < 3 ? 6 : 0),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          );
+        }),
+      ),
     );
   }
 }

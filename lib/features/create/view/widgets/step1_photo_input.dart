@@ -18,10 +18,10 @@ class Step1PhotoInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final exampleImages = [
-      'assets/create/br1.jpeg',
-      'assets/create/br2.jpeg',
-      'assets/create/br3.jpeg',
-      'assets/create/br4.jpeg',
+      'assets/create/cj2.jpeg',
+      'assets/create/cj1.jpeg',
+      'assets/create/cj4.jpeg',
+      'assets/create/cj3.jpeg',
     ];
 
     return Column(
@@ -33,67 +33,73 @@ class Step1PhotoInput extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // Show selected image (gallery or example)
         if (selectedImageSource != null)
-          Container(
-            height: 200,
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
+          GestureDetector(
+            onTap: onPickPhoto, // tap to change image
+            child: Container(
+              height: 200,
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              clipBehavior: Clip.hardEdge,
+              child:
+                  selectedImageSource is File
+                      ? Image.file(
+                        selectedImageSource as File,
+                        fit: BoxFit.cover,
+                      )
+                      : Image.asset(
+                        selectedImageSource as String,
+                        fit: BoxFit.cover,
+                      ),
             ),
-            clipBehavior: Clip.hardEdge,
-            child:
-                selectedImageSource is File
-                    ? Image.file(selectedImageSource as File, fit: BoxFit.cover)
-                    : Image.asset(
-                      selectedImageSource as String,
-                      fit: BoxFit.cover,
-                    ),
           ),
 
-        DottedBorder(
-          options: const RectDottedBorderOptions(
-            dashPattern: [6, 3],
-            strokeWidth: 1,
-            padding: EdgeInsets.all(0),
-          ),
-          child: Container(
-            height: 180,
-            width: double.infinity,
-            alignment: Alignment.center,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Start Redesigning',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Redesign and beautify your home',
-                  style: TextStyle(color: Colors.black54),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: onPickPhoto,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add a Photo'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    shape: const StadiumBorder(),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
+        if (selectedImageSource == null)
+          DottedBorder(
+            options: const RectDottedBorderOptions(
+              dashPattern: [6, 3],
+              strokeWidth: 1,
+              padding: EdgeInsets.all(0),
+            ),
+            child: Container(
+              height: 180,
+              width: double.infinity,
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Start Redesigning',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Redesign and beautify your home',
+                    style: TextStyle(color: Colors.black54),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: onPickPhoto,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add a Photo'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      shape: const StadiumBorder(),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
 
         const SizedBox(height: 24),
         const Text(

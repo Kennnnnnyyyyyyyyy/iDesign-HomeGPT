@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interior_designer_jasper/core/constants/palettes.dart';
+import 'package:interior_designer_jasper/core/widgets/palette_card.dart';
 import 'package:interior_designer_jasper/features/garden_design/providers/garden_providers.dart';
 import 'package:interior_designer_jasper/features/garden_design/view_model/garden_design_notifier.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
@@ -14,85 +16,9 @@ class Step3GardenPalette extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedPalette = ref.watch(selectedGardenPaletteProvider);
 
-    final palettes = [
-      {
-        'name': 'Surprise Me',
-        'colors': [
-          Colors.red,
-          Colors.orange,
-          Colors.yellow,
-          Colors.green,
-          Colors.blue,
-        ],
-      },
-      {
-        'name': 'Millennial Gray',
-        'colors': [
-          Colors.grey[100]!,
-          Colors.grey[300]!,
-          Colors.grey[500]!,
-          Colors.grey[700]!,
-        ],
-      },
-      {
-        'name': 'Terracotta Mirage',
-        'colors': [
-          Color(0xFFFFE5D9),
-          Color(0xFFFEB89F),
-          Color(0xFFFF8552),
-          Color(0xFFD94F2A),
-        ],
-      },
-      {
-        'name': 'Neon Sunset',
-        'colors': [Colors.pink, Colors.purpleAccent, Colors.yellow],
-      },
-      {
-        'name': 'Forest Hues',
-        'colors': [
-          Colors.green[900]!,
-          Colors.green[600]!,
-          Colors.green[300]!,
-          Colors.green[100]!,
-        ],
-      },
-      {
-        'name': 'Peach Orchard',
-        'colors': [
-          Color(0xFFFFF3EC),
-          Color(0xFFFFDFD3),
-          Color(0xFFFFC4B2),
-          Color(0xFFFFA78C),
-        ],
-      },
-      {
-        'name': 'Fuschia Blossom',
-        'colors': [Colors.pink[100]!, Colors.pink[300]!, Colors.pink[600]!],
-      },
-      {
-        'name': 'Emerald Gem',
-        'colors': [
-          Colors.green[800]!,
-          Colors.green[600]!,
-          Colors.green[400]!,
-          Colors.green[200]!,
-        ],
-      },
-      {
-        'name': 'Pastel Breeze',
-        'colors': [
-          Colors.teal[50]!,
-          Colors.purple[50]!,
-          Colors.yellow[50]!,
-          Colors.blue[50]!,
-        ],
-      },
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header Row
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
           child: Row(
@@ -111,8 +37,6 @@ class Step3GardenPalette extends ConsumerWidget {
             ],
           ),
         ),
-
-        // Progress
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -130,9 +54,7 @@ class Step3GardenPalette extends ConsumerWidget {
             }),
           ),
         ),
-
         const SizedBox(height: 24),
-
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16),
           child: Text(
@@ -148,8 +70,6 @@ class Step3GardenPalette extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-
-        // Palette Grid
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -163,59 +83,23 @@ class Step3GardenPalette extends ConsumerWidget {
               ),
               itemBuilder: (context, index) {
                 final palette = palettes[index];
-                final isSelected = selectedPalette == palette['name'];
+                final name = palette['name'] as String;
+                final colors = palette['colors'] as List<Color>;
+                final isSelected = selectedPalette == name;
 
-                return GestureDetector(
+                return PaletteTile(
+                  name: name,
+                  colors: colors,
+                  isSelected: isSelected,
                   onTap: () {
                     ref.read(selectedGardenPaletteProvider.notifier).state =
-                        palette['name'] as String;
+                        name;
                   },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(
-                        color:
-                            isSelected
-                                ? Colors.redAccent
-                                : Colors.grey.shade300,
-                        width: isSelected ? 2 : 1,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children:
-                                (palette['colors'] as List<Color>).map((color) {
-                                  return Expanded(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: color,
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Text(
-                            palette['name'] as String,
-                            style: const TextStyle(fontSize: 13),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 );
               },
             ),
           ),
         ),
-
         Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(

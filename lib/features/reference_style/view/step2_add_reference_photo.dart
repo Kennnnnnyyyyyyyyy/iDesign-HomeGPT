@@ -123,10 +123,10 @@ class _Step2AddReferencePhotoState
         _selectedImageFile != null || _selectedAssetPath != null;
 
     final exampleImages = [
-      'assets/create/br1.jpeg',
-      'assets/create/br2.jpeg',
-      'assets/create/br3.jpeg',
-      'assets/create/br4.jpeg',
+      'assets/create/cj1.jpeg',
+      'assets/create/cj2.jpeg',
+      'assets/create/cj3.jpeg',
+      'assets/create/cj4.jpeg',
     ];
 
     return Stack(

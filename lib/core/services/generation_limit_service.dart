@@ -1,3 +1,4 @@
+import 'package:qonversion_flutter/qonversion_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class GenerationLimitService {
@@ -23,5 +24,20 @@ class GenerationLimitService {
 
     print('🎯 User generated $countToday designs today.');
     return countToday;
+  }
+
+  /// New method to check if user can generate more
+  Future<bool> canGenerate() async {
+    final qonversion = Qonversion.getSharedInstance();
+    final entitlements = await qonversion.checkEntitlements();
+    final entitlement = entitlements['premium_access_homegpt'];
+
+    if (entitlement?.isActive ?? false) {
+      // Premium users: no limit
+      return true;
+    }
+
+    final countToday = await getTodayGenerationCount();
+    return countToday < freeDailyLimit;
   }
 }
