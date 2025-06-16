@@ -1,11 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
 import 'package:path_provider/path_provider.dart';
-import 'paint_dialog.dart'; // NEW custom paint dialog
+import 'paint_dialog.dart';
 
 class PaintPage extends StatefulWidget {
   const PaintPage({super.key});
@@ -16,40 +15,13 @@ class PaintPage extends StatefulWidget {
 
 class _PaintPageState extends State<PaintPage> {
   final exampleImages = [
-    'assets/create/pv1.jpeg',
-    'assets/create/pv2.jpeg',
-    'assets/create/pv3.jpeg',
-    'assets/create/pv4.jpeg',
+    'assets/create/pd1.jpeg',
+    'assets/create/pd2.jpeg',
+    'assets/create/pd3.jpeg',
+    'assets/create/pd4.jpeg',
+    'assets/create/pd5.jpeg',
   ];
 
-  Color _selectedColor = Colors.white;
-
-  void _showColorPicker() {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Select a color'),
-            content: SingleChildScrollView(
-              child: ColorPicker(
-                pickerColor: _selectedColor,
-                onColorChanged:
-                    (color) => setState(() => _selectedColor = color),
-                enableAlpha: false,
-                displayThumbColor: true,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Done'),
-              ),
-            ],
-          ),
-    );
-  }
-
-  /// 🟢 Unified Image Picker for Camera & Gallery
   void _showImageSourceActionSheet() {
     showModalBottomSheet(
       context: context,
@@ -99,9 +71,7 @@ class _PaintPageState extends State<PaintPage> {
   void _openPaintDialog(File imageFile) {
     showDialog(
       context: context,
-      builder:
-          (_) =>
-              PaintDialog(imageFile: imageFile, selectedColor: _selectedColor),
+      builder: (_) => PaintDialogContent(imageFile: imageFile),
     );
   }
 
@@ -113,28 +83,10 @@ class _PaintPageState extends State<PaintPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// Top bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'PRO',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
                   const Spacer(),
                   const Text(
                     'Paint',
@@ -148,8 +100,6 @@ class _PaintPageState extends State<PaintPage> {
                 ],
               ),
             ),
-
-            /// Hero
             ClipRRect(
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(24),
@@ -161,24 +111,15 @@ class _PaintPageState extends State<PaintPage> {
                   SizedBox(
                     height: 300,
                     width: double.infinity,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.asset(
-                          'assets/home_page/paint_visualisation.png',
-                          fit: BoxFit.cover,
-                        ),
-                        Container(color: Colors.black.withOpacity(0.4)),
-                      ],
+                    child: Image.asset(
+                      'assets/home_page/paint_visualisation.png',
+                      fit: BoxFit.cover,
                     ),
                   ),
-                  const Positioned(
-                    bottom: 72,
-                    child: Text(
-                      'Mark, recolor, and transform your\nspace effortlessly.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
+                  Container(
+                    height: 300,
+                    width: double.infinity,
+                    color: Colors.black.withOpacity(0.4),
                   ),
                   Positioned(
                     bottom: 20,
@@ -204,41 +145,6 @@ class _PaintPageState extends State<PaintPage> {
                 ],
               ),
             ),
-
-            const SizedBox(height: 24),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Pick Your Paint Color',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            /// Color Picker Display
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: GestureDetector(
-                onTap: _showColorPicker,
-                child: Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: _selectedColor,
-                    border: Border.all(color: Colors.black),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'Tap to pick a color',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
             const SizedBox(height: 24),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
@@ -248,8 +154,6 @@ class _PaintPageState extends State<PaintPage> {
               ),
             ),
             const SizedBox(height: 12),
-
-            /// Example Images
             SizedBox(
               height: 110,
               child: ListView.separated(

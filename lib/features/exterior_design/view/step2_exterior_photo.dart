@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:interior_designer_jasper/features/exterior_design/providers/exterior_providers.dart'; // Adjust this import
+import 'package:interior_designer_jasper/features/exterior_design/providers/exterior_providers.dart';
 
 class Step2ExteriorBuildingType extends ConsumerStatefulWidget {
   final VoidCallback onContinue;
@@ -37,12 +37,12 @@ class _Step2ExteriorBuildingTypeState
   @override
   Widget build(BuildContext context) {
     final buildings = [
-      {'name': 'Apartment', 'icon': Icons.apartment},
-      {'name': 'House', 'icon': Icons.house},
-      {'name': 'Office', 'icon': Icons.business},
-      {'name': 'Residential', 'icon': Icons.home_work},
-      {'name': 'School', 'icon': Icons.school},
-      {'name': 'Villa', 'icon': Icons.villa},
+      {'name': 'Apartment', 'image': 'assets/create/apartment.jpeg'},
+      {'name': 'House', 'image': 'assets/create/house.jpeg'},
+      {'name': 'Office', 'image': 'assets/create/office.jpeg'},
+      {'name': 'Residential', 'image': 'assets/create/residential.jpeg'},
+      {'name': 'School', 'image': 'assets/create/school.jpeg'},
+      {'name': 'Villa', 'image': 'assets/create/villa.jpeg'},
     ];
 
     return Column(
@@ -109,7 +109,7 @@ class _Step2ExteriorBuildingTypeState
         ),
         const SizedBox(height: 16),
 
-        // Grid of building types using icons
+        // Grid of building types using images
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -142,14 +142,17 @@ class _Step2ExteriorBuildingTypeState
                         width: isSelected ? 2 : 1,
                       ),
                     ),
-                    padding: const EdgeInsets.all(16),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          building['icon'] as IconData,
-                          size: 40,
-                          color: isSelected ? Colors.redAccent : Colors.black54,
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            building['image'] as String,
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Text(
@@ -175,12 +178,16 @@ class _Step2ExteriorBuildingTypeState
             onPressed: _selected != null ? widget.onContinue : null,
             style: ElevatedButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
+              textStyle: TextStyle(color: Colors.white),
               backgroundColor: Colors.redAccent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: const Text('Continue', style: TextStyle(fontSize: 16)),
+            child: const Text(
+              'Continue',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
           ),
         ),
       ],

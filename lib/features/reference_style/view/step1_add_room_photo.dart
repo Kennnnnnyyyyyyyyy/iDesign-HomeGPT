@@ -236,6 +236,9 @@ class _Step1AddRoomPhotoState extends ConsumerState<Step1AddRoomPhoto> {
                                 ElevatedButton.icon(
                                   onPressed: _showImageSourceActionSheet,
                                   style: ElevatedButton.styleFrom(
+                                    textStyle: const TextStyle(
+                                      color: Colors.white,
+                                    ),
                                     backgroundColor: Colors.black,
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 20,
@@ -315,7 +318,10 @@ class _Step1AddRoomPhotoState extends ConsumerState<Step1AddRoomPhoto> {
               child:
                   _isUploading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Continue', style: TextStyle(fontSize: 18)),
+                      : const Text(
+                        'Continue',
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
             ),
           ),
         ],

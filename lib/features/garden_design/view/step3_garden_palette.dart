@@ -143,7 +143,10 @@ class Step3GardenPalette extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: const Text('Continue', style: TextStyle(fontSize: 16)),
+            child: const Text(
+              'Continue',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
           ),
         ),
       ],

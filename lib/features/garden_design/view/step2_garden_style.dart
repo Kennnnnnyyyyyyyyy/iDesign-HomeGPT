@@ -189,7 +189,10 @@ class Step2GardenStyle extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: const Text('Continue', style: TextStyle(fontSize: 16)),
+            child: const Text(
+              'Continue',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
           ),
         ),
       ],

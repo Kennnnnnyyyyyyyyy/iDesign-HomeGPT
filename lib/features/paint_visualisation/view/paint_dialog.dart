@@ -1,64 +1,84 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image/image.dart' as img;
 import 'package:image_painter/image_painter.dart';
 import 'package:interior_designer_jasper/features/paint_visualisation/view_model.dart/ai_paint_generator.dart';
-import 'package:interior_designer_jasper/features/replace_object/view_model/replace_object_viewmodel.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:image/image.dart' as img;
 
-class PaintDialog extends ConsumerStatefulWidget {
+class PaintDialogContent extends ConsumerStatefulWidget {
   final File imageFile;
-  final Color selectedColor;
-
-  const PaintDialog({
-    super.key,
-    required this.imageFile,
-    required this.selectedColor,
-  });
+  const PaintDialogContent({super.key, required this.imageFile});
 
   @override
-  ConsumerState<PaintDialog> createState() => _PaintDialogState();
+  ConsumerState<PaintDialogContent> createState() => _PaintDialogState();
 }
 
-class _PaintDialogState extends ConsumerState<PaintDialog> {
+class _PaintDialogState extends ConsumerState<PaintDialogContent> {
   late ImagePainterController _controller;
-  bool _isLoading = false;
+  Color selectedColor = Colors.redAccent;
+  bool _isProcessing = false;
 
   @override
   void initState() {
     super.initState();
     _controller = ImagePainterController(
-      strokeWidth: 30,
-      color: widget.selectedColor.withValues(),
+      strokeWidth: 50,
+      color: selectedColor.withOpacity(0.4),
       mode: PaintMode.freeStyle,
     );
   }
 
-  Future<void> _onDone() async {
-    setState(() => _isLoading = true);
+  void _openColorPicker() {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Choose Mask Color'),
+            content: ColorPicker(
+              pickerColor: selectedColor,
+              onColorChanged: (color) {
+                setState(() {
+                  selectedColor = color;
+                  _controller.setColor(color.withOpacity(0.4));
+                });
+              },
+              enableAlpha: false,
+              displayThumbColor: true,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Done'),
+              ),
+            ],
+          ),
+    );
+  }
 
+  Future<void> _onSubmit() async {
+    setState(() => _isProcessing = true);
     try {
-      // 1. Export user-painted mask as image bytes
-      final bytes = await _controller.exportImage();
-      if (bytes == null) throw Exception('Failed to export mask image');
+      // Export mask from painter
+      final exportedBytes = await _controller.exportImage();
+      if (exportedBytes == null) throw Exception('Mask export failed');
 
-      final decodedMask = img.decodeImage(bytes);
+      final decodedMask = img.decodeImage(exportedBytes);
       if (decodedMask == null) throw Exception('Failed to decode mask image');
 
+      // Resize original image for consistency
       final originalBytes = await widget.imageFile.readAsBytes();
       final originalImage = img.decodeImage(originalBytes);
       if (originalImage == null)
         throw Exception('Failed to decode original image');
 
-      // 2. Resize mask to original image size
-      final resizedMask = img.copyResize(
-        decodedMask,
-        width: originalImage.width,
-        height: originalImage.height,
-      );
+      // Resize both to 1024 width to avoid payload size issue
+      const targetWidth = 1024;
+      final resizedMask = img.copyResize(decodedMask, width: targetWidth);
+      final resizedOriginal = img.copyResize(originalImage, width: targetWidth);
 
       final rgbMask = img.Image.fromBytes(
         width: resizedMask.width,
@@ -66,31 +86,35 @@ class _PaintDialogState extends ConsumerState<PaintDialog> {
         bytes: resizedMask.getBytes(order: img.ChannelOrder.rgb).buffer,
       );
 
+      // Save resized mask file
       final encodedPng = img.encodePng(rgbMask);
       final dir = await getTemporaryDirectory();
-      final maskFile = File('${dir.path}/paint_mask.png')
+      final maskFile = File('${dir.path}/mask_resized.png')
         ..writeAsBytesSync(encodedPng);
 
-      // 3. Use AI Paint Generator
+      // Save resized original as well (for better AI stability)
+      final originalJpg = img.encodeJpg(resizedOriginal, quality: 90);
+      final resizedOriginalFile = File('${dir.path}/original_resized.jpg')
+        ..writeAsBytesSync(originalJpg);
+
+      // 🔥 Call AI Pipeline
       final aiPaint = ref.read(aiPaintGeneratorProvider(context));
       final resultUrl = await aiPaint.repaintFromMask(
         maskImage: maskFile,
-        originalImage: widget.imageFile,
+        originalImage: resizedOriginalFile,
       );
 
-      // 4. Navigate to result page if success
       if (resultUrl != null && mounted) {
-        if (context.mounted) {
-          context.goNamed(RouterConstants.aiResult, extra: resultUrl);
-        }
+        // Navigate to AI Result Page
+        context.pushNamed(RouterConstants.aiResult, extra: resultUrl);
       }
     } catch (e) {
-      print('❌ PaintDialog Error: $e');
+      print('❌ Error: $e');
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('❌ Error: $e')));
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
@@ -105,17 +129,30 @@ class _PaintDialogState extends ConsumerState<PaintDialog> {
             children: [
               AppBar(
                 backgroundColor: Colors.black,
-                leading: IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                title: const Text("Paint on Image"),
+                title: const Text("Paint Area"),
                 actions: [
                   IconButton(
+                    icon: const Icon(Icons.color_lens),
+                    onPressed: _openColorPicker,
+                  ),
+                  IconButton(
                     icon: const Icon(Icons.check, color: Colors.green),
-                    onPressed: _isLoading ? null : _onDone,
+                    onPressed: _onSubmit,
                   ),
                 ],
+              ),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 16,
+                ),
+                color: Colors.orange.shade100,
+                child: const Text(
+                  "🖌️ Mark area to recolor.\n🎯 Use color picker for mask color.",
+                  style: TextStyle(fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
               ),
               Expanded(
                 child: ImagePainter.file(
@@ -136,11 +173,11 @@ class _PaintDialogState extends ConsumerState<PaintDialog> {
               ),
             ],
           ),
-          if (_isLoading)
+          if (_isProcessing)
             Container(
-              color: Colors.black.withOpacity(0.6),
+              color: Colors.black.withOpacity(0.5),
               child: const Center(
-                child: CircularProgressIndicator(color: Colors.white),
+                child: CircularProgressIndicator(color: Colors.redAccent),
               ),
             ),
         ],

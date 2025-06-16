@@ -303,7 +303,7 @@ class _Step2AddReferencePhotoState
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
                             'Continue',
-                            style: TextStyle(fontSize: 18),
+                            style: TextStyle(fontSize: 18, color: Colors.white),
                           ),
                 ),
               ),

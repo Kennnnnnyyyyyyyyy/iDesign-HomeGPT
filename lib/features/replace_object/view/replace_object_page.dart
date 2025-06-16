@@ -163,20 +163,10 @@ class ReplaceObjectPage extends StatelessWidget {
                     context,
                   ).load(images[index]);
                   final bytes = byteData.buffer.asUint8List();
-
                   final tempDir = await Directory.systemTemp.createTemp();
                   final tempFile = File('${tempDir.path}/example_$index.jpg');
                   await tempFile.writeAsBytes(bytes);
-
-                  showDialog(
-                    context: context,
-                    builder:
-                        (_) => Dialog(
-                          insetPadding: const EdgeInsets.all(8),
-                          backgroundColor: Colors.black,
-                          child: PaintDialogContent(imageFile: tempFile),
-                        ),
-                  );
+                  await _showTutorial(context, tempFile);
                 },
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
@@ -191,8 +181,8 @@ class ReplaceObjectPage extends StatelessWidget {
         ),
       );
 
-  // 🟢 Added function to allow Camera/Gallery choice
   void _showImageSourceActionSheet(BuildContext context) {
+    final parentContext = context;
     showModalBottomSheet(
       context: context,
       builder:
@@ -204,7 +194,7 @@ class ReplaceObjectPage extends StatelessWidget {
                   title: const Text('Take Photo'),
                   onTap: () async {
                     Navigator.of(context).pop();
-                    await _pickImage(context, ImageSource.camera);
+                    await _pickImage(parentContext, ImageSource.camera);
                   },
                 ),
                 ListTile(
@@ -212,7 +202,7 @@ class ReplaceObjectPage extends StatelessWidget {
                   title: const Text('Choose from Gallery'),
                   onTap: () async {
                     Navigator.of(context).pop();
-                    await _pickImage(context, ImageSource.gallery);
+                    await _pickImage(parentContext, ImageSource.gallery);
                   },
                 ),
               ],
@@ -226,15 +216,49 @@ class ReplaceObjectPage extends StatelessWidget {
     final picked = await picker.pickImage(source: source);
     if (picked != null) {
       final imageFile = File(picked.path);
-      showDialog(
-        context: context,
-        builder:
-            (_) => Dialog(
-              insetPadding: const EdgeInsets.all(8),
-              backgroundColor: Colors.black,
-              child: PaintDialogContent(imageFile: imageFile),
-            ),
-      );
+      await _showTutorial(context, imageFile);
     }
+  }
+
+  Future<void> _showTutorial(BuildContext context, File imageFile) async {
+    if (!context.mounted) return;
+    await showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text("How to Use Retouch"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Text("1️⃣ Mark objects you want to replace."),
+                SizedBox(height: 8),
+                Text("2️⃣ Use brush & eraser tools."),
+                SizedBox(height: 8),
+                Text("3️⃣ Generate your retouched room."),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _openPaintDialog(context, imageFile);
+                },
+                child: const Text("Got it!"),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _openPaintDialog(BuildContext context, File imageFile) {
+    showDialog(
+      context: context,
+      builder:
+          (_) => Dialog(
+            insetPadding: const EdgeInsets.all(8),
+            backgroundColor: Colors.black,
+            child: PaintDialogContent(imageFile: imageFile),
+          ),
+    );
   }
 }

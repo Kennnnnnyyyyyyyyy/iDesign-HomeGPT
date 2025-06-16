@@ -213,6 +213,7 @@ class _Step1ExteriorPhotoState extends ConsumerState<Step1ExteriorPhoto> {
                                   ElevatedButton.icon(
                                     onPressed: _showImageSourceActionSheet,
                                     style: ElevatedButton.styleFrom(
+                                      textStyle: TextStyle(color: Colors.white),
                                       backgroundColor: Colors.black,
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 20,
@@ -289,7 +290,10 @@ class _Step1ExteriorPhotoState extends ConsumerState<Step1ExteriorPhoto> {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: const Text('Continue', style: TextStyle(fontSize: 16)),
+              child: const Text(
+                'Continue',
+                style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
             ),
           ),
         ],

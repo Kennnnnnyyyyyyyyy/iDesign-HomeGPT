@@ -193,13 +193,17 @@ class _Step3ExteriorStyleState extends ConsumerState<Step3ExteriorStyle> {
           child: ElevatedButton(
             onPressed: _selected != null ? widget.onContinue : null,
             style: ElevatedButton.styleFrom(
+              textStyle: TextStyle(color: Colors.white),
               minimumSize: const Size.fromHeight(56),
               backgroundColor: Colors.redAccent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: const Text('Continue', style: TextStyle(fontSize: 16)),
+            child: const Text(
+              'Continue',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
           ),
         ),
       ],

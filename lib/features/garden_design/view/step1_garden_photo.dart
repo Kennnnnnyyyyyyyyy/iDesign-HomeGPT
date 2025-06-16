@@ -28,7 +28,7 @@ class _Step1GardenPhotoState extends ConsumerState<Step1GardenPhoto> {
 
   final exampleImages = [
     'assets/create/gr1.jpeg',
-    'assets/create/gr2.jpeg',
+    // 'assets/create/gr2.jpeg',
     'assets/create/gr3.jpeg',
     'assets/create/gr4.jpeg',
     'assets/create/gr5.jpeg',
@@ -281,7 +281,10 @@ class _Step1GardenPhotoState extends ConsumerState<Step1GardenPhoto> {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: const Text('Continue', style: TextStyle(fontSize: 16)),
+              child: const Text(
+                'Continue',
+                style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
             ),
           ),
         ],

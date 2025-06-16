@@ -28,8 +28,6 @@ class _PaintDialogContentState extends ConsumerState<PaintDialogContent> {
       mode: PaintMode.freeStyle,
       fill: false,
     );
-
-    // Force a fixed translucent color (e.g. red with 40% opacity)
     _controller.setColor(const Color.fromRGBO(255, 0, 0, 0.4));
 
     _promptController.addListener(() {
@@ -112,36 +110,18 @@ class _PaintDialogContentState extends ConsumerState<PaintDialogContent> {
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.pop(context),
               ),
-              title: const Text("Paint Over Object"),
+              title: const Text("Mark Objects"),
               actions: [
                 IconButton(
-                  icon: Icon(
-                    Icons.check,
-                    color:
-                        _isPromptFilled && !_isLoading
-                            ? Colors.green
-                            : Colors.green.withAlpha(102),
-                  ),
+                  icon: Icon(Icons.check, color: Colors.green),
                   onPressed: _isPromptFilled && !_isLoading ? _saveMask : null,
                   tooltip:
                       _isPromptFilled ? 'Submit' : 'Enter prompt to enable',
                 ),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                controller: _promptController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: 'Replace object with...',
-                  hintStyle: TextStyle(color: Colors.white70),
-                  prefixIcon: Icon(Icons.edit, color: Colors.white70),
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-            const Divider(color: Colors.white24),
+
+            // Fullscreen ImagePainter
             Expanded(
               child: ImagePainter.file(
                 widget.imageFile,
@@ -149,22 +129,65 @@ class _PaintDialogContentState extends ConsumerState<PaintDialogContent> {
                 scalable: true,
               ),
             ),
+
+            // Prompt input at bottom
+            Container(
+              color: Colors.black,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+              child: Column(
+                children: [
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'What do you want to put here?',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _promptController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'E.g. Replace with chair / lamp / sofa',
+                      hintStyle: const TextStyle(color: Colors.white70),
+                      filled: true,
+                      fillColor: Colors.white12,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      prefixIcon: const Icon(Icons.edit, color: Colors.white70),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ✅ Clear cancel button
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.only(bottom: 16),
               child: TextButton.icon(
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.cancel, color: Colors.redAccent),
                 label: const Text(
-                  'Cancel',
-                  style: TextStyle(color: Colors.redAccent),
+                  'Cancel Retouch',
+                  style: TextStyle(
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ),
           ],
         ),
+
         if (_isLoading)
           Container(
-            color: Colors.black.withAlpha(153),
+            color: Colors.black.withAlpha(150),
             child: const Center(
               child: CircularProgressIndicator(color: Colors.white),
             ),
