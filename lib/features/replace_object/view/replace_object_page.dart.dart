@@ -35,7 +35,7 @@ class ReplaceObjectPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _buildExampleImages(exampleImages),
+            _buildExampleImages(context, exampleImages),
           ],
         ),
       ),
@@ -139,24 +139,7 @@ class ReplaceObjectPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(30),
               ),
             ),
-            onPressed: () async {
-              final picker = ImagePicker();
-              final picked = await picker.pickImage(
-                source: ImageSource.gallery,
-              );
-              if (picked != null) {
-                final imageFile = File(picked.path);
-                showDialog(
-                  context: context,
-                  builder:
-                      (_) => Dialog(
-                        insetPadding: const EdgeInsets.all(8),
-                        backgroundColor: Colors.black,
-                        child: PaintDialogContent(imageFile: imageFile),
-                      ),
-                );
-              }
-            },
+            onPressed: () => _showImageSourceActionSheet(context),
             icon: const Icon(Icons.add, color: Colors.white),
             label: const Text('Upload', style: TextStyle(color: Colors.white)),
           ),
@@ -165,48 +148,93 @@ class ReplaceObjectPage extends StatelessWidget {
     ),
   );
 
-  Widget _buildExampleImages(List<String> images) => SizedBox(
-    height: 110,
-    child: ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      scrollDirection: Axis.horizontal,
-      itemCount: images.length,
-      separatorBuilder: (_, __) => const SizedBox(width: 14),
-      itemBuilder:
-          (context, index) => GestureDetector(
-            onTap: () async {
-              // Load asset image bytes
-              final byteData = await DefaultAssetBundle.of(
-                context,
-              ).load(images[index]);
-              final bytes = byteData.buffer.asUint8List();
+  Widget _buildExampleImages(BuildContext context, List<String> images) =>
+      SizedBox(
+        height: 110,
+        child: ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          scrollDirection: Axis.horizontal,
+          itemCount: images.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 14),
+          itemBuilder:
+              (context, index) => GestureDetector(
+                onTap: () async {
+                  final byteData = await DefaultAssetBundle.of(
+                    context,
+                  ).load(images[index]);
+                  final bytes = byteData.buffer.asUint8List();
 
-              // Save it to a temp file
-              final tempDir = await Directory.systemTemp.createTemp();
-              final tempFile = File('${tempDir.path}/example_$index.jpg');
-              await tempFile.writeAsBytes(bytes);
+                  final tempDir = await Directory.systemTemp.createTemp();
+                  final tempFile = File('${tempDir.path}/example_$index.jpg');
+                  await tempFile.writeAsBytes(bytes);
 
-              // Open paint dialog with this file
-              showDialog(
-                context: context,
-                builder:
-                    (_) => Dialog(
-                      insetPadding: const EdgeInsets.all(8),
-                      backgroundColor: Colors.black,
-                      child: PaintDialogContent(imageFile: tempFile),
-                    ),
-              );
-            },
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                images[index],
-                width: 100,
-                height: 100,
-                fit: BoxFit.cover,
+                  showDialog(
+                    context: context,
+                    builder:
+                        (_) => Dialog(
+                          insetPadding: const EdgeInsets.all(8),
+                          backgroundColor: Colors.black,
+                          child: PaintDialogContent(imageFile: tempFile),
+                        ),
+                  );
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    images[index],
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
+        ),
+      );
+
+  // 🟢 Added function to allow Camera/Gallery choice
+  void _showImageSourceActionSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder:
+          (context) => SafeArea(
+            child: Wrap(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Take Photo'),
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    await _pickImage(context, ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Choose from Gallery'),
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    await _pickImage(context, ImageSource.gallery);
+                  },
+                ),
+              ],
             ),
           ),
-    ),
-  );
+    );
+  }
+
+  Future<void> _pickImage(BuildContext context, ImageSource source) async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: source);
+    if (picked != null) {
+      final imageFile = File(picked.path);
+      showDialog(
+        context: context,
+        builder:
+            (_) => Dialog(
+              insetPadding: const EdgeInsets.all(8),
+              backgroundColor: Colors.black,
+              child: PaintDialogContent(imageFile: imageFile),
+            ),
+      );
+    }
+  }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+// -------- State Class --------
 class CreateFormState {
   final Object? image;
   final String room;
@@ -11,7 +12,7 @@ class CreateFormState {
   final String palette;
   final String? imageUrl;
 
-  CreateFormState({
+  const CreateFormState({
     this.image,
     this.room = 'Living Room',
     this.style = 'Modern',
@@ -36,14 +37,18 @@ class CreateFormState {
   }
 }
 
+// -------- Notifier Class --------
 class CreateFormNotifier extends StateNotifier<CreateFormState> {
-  CreateFormNotifier() : super(CreateFormState());
+  CreateFormNotifier() : super(const CreateFormState());
 
-  void setImage(Object image) => state = state.copyWith(image: image);
+  void setImage(Object? image) => state = state.copyWith(image: image);
   void setRoom(String room) => state = state.copyWith(room: room);
   void setStyle(String style) => state = state.copyWith(style: style);
   void setPalette(String palette) => state = state.copyWith(palette: palette);
   void setImageUrl(String url) => state = state.copyWith(imageUrl: url);
+
+  /// ✅ RESET FUNCTION
+  void reset() => state = const CreateFormState();
 
   String getPrompt() {
     final palette =
@@ -56,6 +61,7 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
 '''.trim();
   }
 
+  /// Image Upload Logic
   Future<Map<String, String>?> uploadImageToSupabase({int retries = 3}) async {
     final image = state.image;
 
@@ -66,7 +72,6 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
 
     final supabase = Supabase.instance.client;
 
-    // 🔹 1. File from gallery
     if (image is File) {
       final fileName = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final storagePath = 'uploads/$fileName';
@@ -97,9 +102,7 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
           await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
         }
       }
-    }
-    // 🔹 2. Asset image
-    else if (image is String && image.startsWith('assets/')) {
+    } else if (image is String && image.startsWith('assets/')) {
       try {
         print("📤 Uploading asset image...");
         final byteData = await rootBundle.load(image);
@@ -127,15 +130,10 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
         print('❌ Asset upload failed: $e');
         return null;
       }
-    }
-    // 🔹 3. Already-hosted URL
-    else if (image is String && image.startsWith('http')) {
+    } else if (image is String && image.startsWith('http')) {
       print('🌐 Using hosted image URL directly:\n$image');
       setImageUrl(image);
-      return {
-        'publicUrl': image,
-        'filePath': '', // External images not uploaded
-      };
+      return {'publicUrl': image, 'filePath': ''};
     }
 
     print('❌ Unsupported image type. Value: $image');
@@ -143,6 +141,7 @@ Generate a ${state.style} style ${state.room.toLowerCase()} interior design usin
   }
 }
 
+// -------- Provider --------
 final createFormProvider =
     StateNotifierProvider<CreateFormNotifier, CreateFormState>(
       (ref) => CreateFormNotifier(),

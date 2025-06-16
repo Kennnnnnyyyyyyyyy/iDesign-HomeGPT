@@ -49,10 +49,38 @@ class _PaintPageState extends State<PaintPage> {
     );
   }
 
-  Future<void> _pickImageFromGallery() async {
-    final pickedFile = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
+  /// 🟢 Unified Image Picker for Camera & Gallery
+  void _showImageSourceActionSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder:
+          (context) => SafeArea(
+            child: Wrap(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Take Photo'),
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    await _pickImage(ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Choose from Gallery'),
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    await _pickImage(ImageSource.gallery);
+                  },
+                ),
+              ],
+            ),
+          ),
     );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final pickedFile = await ImagePicker().pickImage(source: source);
     if (pickedFile != null) {
       final imageFile = File(pickedFile.path);
       _openPaintDialog(imageFile);
@@ -165,7 +193,7 @@ class _PaintPageState extends State<PaintPage> {
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
-                      onPressed: _pickImageFromGallery,
+                      onPressed: _showImageSourceActionSheet,
                       icon: const Icon(Icons.add, color: Colors.white),
                       label: const Text(
                         'Upload',

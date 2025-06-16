@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:interior_designer_jasper/core/providers/ai_pipeline_executor.dart';
 import 'package:interior_designer_jasper/features/create/viewmodel/create_form_notifier.dart';
 import 'package:interior_designer_jasper/features/create/view/widgets/step1_photo_input.dart';
@@ -23,11 +24,62 @@ class _CreatePageState extends ConsumerState<CreatePage> {
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? image = await _picker.pickImage(source: source);
     if (image != null) {
-      ref.read(createFormProvider.notifier).setImage(File(image.path));
+      final croppedFile = await _cropImage(File(image.path));
+      if (croppedFile != null) {
+        ref.read(createFormProvider.notifier).setImage(croppedFile);
+      }
     }
+  }
+
+  Future<File?> _cropImage(File file) async {
+    final croppedFile = await ImageCropper().cropImage(
+      sourcePath: file.path,
+      aspectRatio: const CropAspectRatio(ratioX: 9, ratioY: 16),
+      compressFormat: ImageCompressFormat.jpg,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Crop Image',
+          lockAspectRatio: true,
+          hideBottomControls: true,
+          toolbarColor: Colors.black,
+          toolbarWidgetColor: Colors.white,
+        ),
+        IOSUiSettings(aspectRatioLockEnabled: true, title: 'Crop Image'),
+      ],
+    );
+    return croppedFile != null ? File(croppedFile.path) : null;
+  }
+
+  void _showImageSourceActionSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder:
+          (context) => SafeArea(
+            child: Wrap(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Take Photo'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Choose from Gallery'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+              ],
+            ),
+          ),
+    );
   }
 
   void _selectExampleImage(String assetPath) {
@@ -36,7 +88,6 @@ class _CreatePageState extends ConsumerState<CreatePage> {
 
   Future<void> _nextStep() async {
     final form = ref.read(createFormProvider);
-
     if (_currentStep == 0 && form.image == null) {
       _showError('Please select a photo to continue.');
       return;
@@ -60,7 +111,6 @@ class _CreatePageState extends ConsumerState<CreatePage> {
       setState(() => _isLoading = true);
       final finalUrl = await ref.read(aiPipelineProvider(context)).execute();
       setState(() => _isLoading = false);
-
       if (finalUrl != null && mounted) {
         context.goNamed(RouterConstants.aiResult, extra: finalUrl);
       }
@@ -83,7 +133,7 @@ class _CreatePageState extends ConsumerState<CreatePage> {
 
     final steps = [
       Step1PhotoInput(
-        onPickPhoto: _pickImage,
+        onPickPhoto: _showImageSourceActionSheet,
         onExamplePhotoSelected: _selectExampleImage,
         selectedImageSource: form.image,
       ),
@@ -106,86 +156,86 @@ class _CreatePageState extends ConsumerState<CreatePage> {
     ];
 
     return Scaffold(
-      body: Stack(
-        children: [
-          SafeArea(
-            child: Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    children: [
-                      if (_currentStep > 0)
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: _prevStep,
-                        )
-                      else
-                        const SizedBox(width: 48),
-                      Expanded(
-                        child: Center(
-                          child: Text(
-                            "Step ${_currentStep + 1} of ${steps.length}",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final maxHeight = constraints.maxHeight;
+            final maxWidth = constraints.maxWidth;
+            final portraitWidth = (maxHeight * 9 / 16).clamp(0, maxWidth);
+            final portraitHeight = portraitWidth * 16 / 9;
+
+            return Center(
+              child: SizedBox(
+                width: portraitWidth.toDouble(),
+                height: portraitHeight,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      child: Row(
+                        children: [
+                          if (_currentStep > 0)
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back),
+                              onPressed: _prevStep,
+                            )
+                          else
+                            const SizedBox(width: 48),
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                "Step ${_currentStep + 1} of ${steps.length}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
                           ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed:
+                                () => context.goNamed(RouterConstants.home),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: steps[_currentStep],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _nextStep,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size.fromHeight(56),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: Text(
+                          _currentStep < steps.length - 1
+                              ? 'Continue'
+                              : 'Generate Design',
+                          style: const TextStyle(fontSize: 18),
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => context.goNamed(RouterConstants.home),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Main Step Widget
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: steps[_currentStep],
-                  ),
-                ),
-
-                // Continue Button
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _nextStep,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
                     ),
-                    child: Text(
-                      _currentStep < steps.length - 1
-                          ? 'Continue'
-                          : 'Generate Design',
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-
-          if (_isLoading)
-            Container(
-              color: Colors.black.withOpacity(0.4),
-              child: const Center(
-                child: CircularProgressIndicator(color: Colors.white),
               ),
-            ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }

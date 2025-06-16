@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:dotted_border/dotted_border.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interior_designer_jasper/features/create/viewmodel/create_form_notifier.dart';
 
-class Step1PhotoInput extends StatelessWidget {
+class Step1PhotoInput extends ConsumerWidget {
   final VoidCallback onPickPhoto;
-  final void Function(String assetPath) onExamplePhotoSelected;
-  final Object? selectedImageSource;
+  final Function(String assetPath) onExamplePhotoSelected;
+  final dynamic selectedImageSource;
 
   const Step1PhotoInput({
     super.key,
@@ -15,122 +15,145 @@ class Step1PhotoInput extends StatelessWidget {
     required this.selectedImageSource,
   });
 
+  double _getAspectRatio() {
+    if (selectedImageSource is String &&
+        selectedImageSource.startsWith('assets/')) {
+      return 1;
+    } else if (selectedImageSource is File) {
+      return 9 / 16;
+    }
+    return 9 / 16;
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final exampleImages = [
-      'assets/create/cj2.jpeg',
-      'assets/create/cj1.jpeg',
-      'assets/create/cj4.jpeg',
-      'assets/create/cj3.jpeg',
+      'assets/create/ro1.jpeg',
+      'assets/create/ro2.jpeg',
+      'assets/create/ro3.jpeg',
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Add a Photo',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-
-        if (selectedImageSource != null)
-          GestureDetector(
-            onTap: onPickPhoto, // tap to change image
-            child: Container(
-              height: 200,
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              clipBehavior: Clip.hardEdge,
-              child:
-                  selectedImageSource is File
-                      ? Image.file(
-                        selectedImageSource as File,
-                        fit: BoxFit.cover,
-                      )
-                      : Image.asset(
-                        selectedImageSource as String,
-                        fit: BoxFit.cover,
-                      ),
-            ),
-          ),
-
-        if (selectedImageSource == null)
-          DottedBorder(
-            options: const RectDottedBorderOptions(
-              dashPattern: [6, 3],
-              strokeWidth: 1,
-              padding: EdgeInsets.all(0),
-            ),
-            child: Container(
-              height: 180,
-              width: double.infinity,
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Start Redesigning',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Redesign and beautify your home',
-                    style: TextStyle(color: Colors.black54),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: onPickPhoto,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add a Photo'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      shape: const StadiumBorder(),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
+    return SingleChildScrollView(
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.6,
+              child: AspectRatio(
+                aspectRatio: _getAspectRatio(),
+                child: Stack(
+                  children: [
+                    GestureDetector(
+                      onTap: onPickPhoto,
+                      child: Container(
+                        width: double.infinity,
+                        height: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: _buildImageView(),
                       ),
                     ),
-                  ),
-                ],
+                    if (selectedImageSource != null)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: InkWell(
+                          onTap: () {
+                            ref.read(createFormProvider.notifier).reset();
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.5),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.all(6),
+                              child: Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
+            const SizedBox(height: 24),
 
-        const SizedBox(height: 24),
-        const Text(
-          'Example Photos',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            // ✅ Always show example photos below
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                'Example Photos',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 100,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                itemCount: exampleImages.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  final assetPath = exampleImages[index];
+                  return GestureDetector(
+                    onTap: () => onExamplePhotoSelected(assetPath),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        assetPath,
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 100,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: exampleImages.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final path = exampleImages[index];
-              return GestureDetector(
-                onTap: () => onExamplePhotoSelected(path),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    path,
-                    height: 100,
-                    width: 100,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
+      ),
     );
+  }
+
+  Widget _buildImageView() {
+    if (selectedImageSource == null) {
+      return const Center(
+        child: Icon(Icons.add_a_photo, size: 40, color: Colors.black54),
+      );
+    } else if (selectedImageSource is File) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.file(
+          selectedImageSource,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+        ),
+      );
+    } else if (selectedImageSource is String &&
+        selectedImageSource.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.asset(
+          selectedImageSource,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+        ),
+      );
+    } else {
+      return const SizedBox();
+    }
   }
 }

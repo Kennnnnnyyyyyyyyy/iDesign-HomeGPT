@@ -8,15 +8,19 @@ final supabaseProvider = Provider<SupabaseClient>((ref) {
 class AuthNotifier extends AsyncNotifier<void> {
   @override
   Future<void> build() async {
-    // no-op for now
+    await signInAnonymously();
   }
 
   Future<void> signInAnonymously() async {
     state = const AsyncLoading();
     try {
+      print('[AuthNotifier] Starting anonymous sign-in');
       final supabase = Supabase.instance.client;
       final result = await supabase.auth.signInAnonymously();
       final user = result.user;
+
+      print('[AuthNotifier] Supabase response: $result');
+      print('[AuthNotifier] Retrieved user: ${user?.id}');
 
       if (user == null) {
         throw Exception('Anonymous user creation failed');
@@ -25,11 +29,13 @@ class AuthNotifier extends AsyncNotifier<void> {
       await _syncAnonymousUserToSupabase(user);
       state = const AsyncData(null);
     } catch (e, st) {
+      print('[AuthNotifier] Error during signInAnonymously: $e');
       state = AsyncError(e, st);
     }
   }
 
   Future<void> _syncAnonymousUserToSupabase(User user) async {
+    print('[AuthNotifier] Syncing anonymous user to firebase_users table');
     final now = DateTime.now().toUtc().toIso8601String();
 
     final data = {
@@ -46,8 +52,13 @@ class AuthNotifier extends AsyncNotifier<void> {
       'provider_data': [],
     };
 
-    await Supabase.instance.client.from('firebase_users').upsert(data);
-    print('[AuthNotifier] Anonymous user synced to Supabase.');
+    try {
+      await Supabase.instance.client.from('firebase_users').upsert(data);
+      print('[AuthNotifier] Anonymous user synced to Supabase successfully.');
+    } catch (e) {
+      print('[AuthNotifier] Error syncing user to firebase_users: $e');
+      rethrow;
+    }
   }
 }
 

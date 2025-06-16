@@ -22,15 +22,44 @@ class _Step1AddRoomPhotoState extends ConsumerState<Step1AddRoomPhoto> {
   String? _selectedAssetPath;
   bool _isUploading = false;
 
-  Future<void> _pickImage() async {
+  Future<void> _showImageSourceActionSheet() async {
+    showModalBottomSheet(
+      context: context,
+      builder:
+          (context) => SafeArea(
+            child: Wrap(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Take Photo'),
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    await _pickImage(ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Choose from Gallery'),
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    await _pickImage(ImageSource.gallery);
+                  },
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery);
+    final picked = await picker.pickImage(source: source);
 
     if (picked == null) return;
 
     setState(() {
       _selectedImageFile = File(picked.path);
-      _selectedAssetPath = null; // Clear asset selection if a file is picked
+      _selectedAssetPath = null;
     });
   }
 
@@ -39,6 +68,12 @@ class _Step1AddRoomPhotoState extends ConsumerState<Step1AddRoomPhoto> {
       _selectedImageFile = null;
       _selectedAssetPath = assetPath;
     });
+  }
+
+  double _getAspectRatio() {
+    if (_selectedAssetPath != null) return 1; // example photos 1:1
+    if (_selectedImageFile != null) return 9 / 16; // camera/gallery
+    return 9 / 16;
   }
 
   Future<void> _uploadSelectedImageAndContinue() async {
@@ -57,14 +92,12 @@ class _Step1AddRoomPhotoState extends ConsumerState<Step1AddRoomPhoto> {
         fileToUpload = _selectedImageFile!;
         fileName = 'room_${DateTime.now().millisecondsSinceEpoch}.jpg';
       } else {
-        // Load asset as bytes, write to temp file
         final byteData = await rootBundle.load(_selectedAssetPath!);
         final tempDir = Directory.systemTemp;
         fileToUpload = File(
           '${tempDir.path}/room_example_${DateTime.now().millisecondsSinceEpoch}.jpg',
         );
         await fileToUpload.writeAsBytes(byteData.buffer.asUint8List());
-
         fileName = 'room_example_${DateTime.now().millisecondsSinceEpoch}.jpg';
       }
 
@@ -76,7 +109,6 @@ class _Step1AddRoomPhotoState extends ConsumerState<Step1AddRoomPhoto> {
       );
       final publicUrl = storageRef.getPublicUrl(filePath);
 
-      // Set in ViewModel
       ref
           .read(referenceStyleNotifierProvider.notifier)
           .setRoomPhotoUrl(publicUrl);
@@ -105,166 +137,189 @@ class _Step1AddRoomPhotoState extends ConsumerState<Step1AddRoomPhoto> {
 
     final hasSelection =
         _selectedImageFile != null || _selectedAssetPath != null;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final boxWidth = screenWidth * 0.5;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // App Bar
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // AppBar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'PRO',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.redAccent,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'PRO',
+                const Spacer(),
+                const Text(
+                  'Reference Style (1 / 2)',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 1,
                   ),
                 ),
-              ),
-              const Spacer(),
-              const Text(
-                'Reference Style (1 / 2)',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1,
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => context.goNamed(RouterConstants.home),
+                ),
+              ],
+            ),
+          ),
+          const Divider(thickness: 2),
+
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Text(
+              'Add a Photo of Your Room',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+          ),
+
+          // Upload Box with dynamic aspect ratio
+          Center(
+            child: SizedBox(
+              width: boxWidth,
+              child: AspectRatio(
+                aspectRatio: _getAspectRatio(),
+                child: GestureDetector(
+                  onTap: _showImageSourceActionSheet,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade400),
+                    ),
+                    child:
+                        _selectedImageFile != null
+                            ? ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.file(
+                                _selectedImageFile!,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                            : _selectedAssetPath != null
+                            ? ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.asset(
+                                _selectedAssetPath!,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                            : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.add_a_photo,
+                                  size: 40,
+                                  color: Colors.black54,
+                                ),
+                                const SizedBox(height: 12),
+                                ElevatedButton.icon(
+                                  onPressed: _showImageSourceActionSheet,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.black,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                  ),
+                                  icon: const Icon(
+                                    Icons.add,
+                                    color: Colors.white,
+                                  ),
+                                  label: const Text(
+                                    'Add a Photo',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            ),
+                  ),
                 ),
               ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => context.goNamed(RouterConstants.home),
-              ),
-            ],
+            ),
           ),
-        ),
 
-        const Divider(thickness: 2),
+          const SizedBox(height: 28),
 
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Text(
-            'Add a Photo of Your Room',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'Example Photos',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
-        ),
+          const SizedBox(height: 12),
 
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          height: 200,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Center(
-            child: Builder(
-              builder: (_) {
-                if (_selectedImageFile != null) {
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.file(
-                      _selectedImageFile!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
+          SizedBox(
+            height: 100,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              scrollDirection: Axis.horizontal,
+              itemCount: exampleImages.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final asset = exampleImages[index];
+                return GestureDetector(
+                  onTap: () => _selectExampleAsset(asset),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: Image.asset(asset, fit: BoxFit.cover),
                     ),
-                  );
-                } else if (_selectedAssetPath != null) {
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.asset(
-                      _selectedAssetPath!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                    ),
-                  );
-                } else {
-                  return ElevatedButton.icon(
-                    onPressed: _isUploading ? null : _pickImage,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add a Photo'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                    ),
-                  );
-                }
+                  ),
+                );
               },
             ),
           ),
-        ),
 
-        const SizedBox(height: 24),
+          const SizedBox(height: 24),
 
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Example Photos',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        SizedBox(
-          height: 100,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: exampleImages.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final assetPath = exampleImages[index];
-              return GestureDetector(
-                onTap: () => _selectExampleAsset(assetPath),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    assetPath,
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
-                  ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: ElevatedButton(
+              onPressed:
+                  hasSelection && !_isUploading
+                      ? _uploadSelectedImageAndContinue
+                      : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                minimumSize: const Size.fromHeight(56),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              );
-            },
-          ),
-        ),
-
-        const Spacer(),
-
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: ElevatedButton(
-            onPressed:
-                hasSelection && !_isUploading
-                    ? _uploadSelectedImageAndContinue
-                    : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
-              minimumSize: const Size.fromHeight(56),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
               ),
+              child:
+                  _isUploading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Continue', style: TextStyle(fontSize: 18)),
             ),
-            child:
-                _isUploading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Continue', style: TextStyle(fontSize: 18)),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

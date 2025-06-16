@@ -29,25 +29,25 @@ class PaletteTile extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
+            // Top color strip with rounded corners
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+              child: SizedBox(
+                height: 80,
                 child: Row(
                   children:
                       colors.map((color) {
-                        return Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(color: color),
-                          ),
-                        );
+                        return Expanded(child: Container(color: color));
                       }).toList(),
                 ),
               ),
             ),
+
+            // Label section
             Padding(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(10),
               child: Text(
                 name,
                 style: TextStyle(
