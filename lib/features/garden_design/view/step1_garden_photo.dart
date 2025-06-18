@@ -100,6 +100,30 @@ class _Step1GardenPhotoState extends ConsumerState<Step1GardenPhoto> {
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
             child: Row(
               children: [
+                // PRO badge
+                GestureDetector(
+                  onTap: () => context.goNamed(RouterConstants.paywall),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: const Text(
+                      'PRO',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                ),
+                const Spacer(),
                 const Text(
                   'Step 1 / 3',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),

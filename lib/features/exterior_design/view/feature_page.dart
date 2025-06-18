@@ -18,6 +18,7 @@ class ExteriorDesignPage extends ConsumerStatefulWidget {
 
 class _ExteriorDesignPageState extends ConsumerState<ExteriorDesignPage> {
   int _currentStep = 0;
+  bool _isLoading = false;
 
   void _nextStep() {
     if (_currentStep < 3) {
@@ -53,12 +54,15 @@ class _ExteriorDesignPageState extends ConsumerState<ExteriorDesignPage> {
         onBack: _prevStep,
         onClose: _exitFlow,
         onSubmit: () async {
-          print('🛠️ onSubmit called — starting exterior design generation...');
+          setState(() => _isLoading = true);
 
+          print('🛠️ onSubmit called — starting exterior design generation...');
           final generator = ref.read(aiDesignGeneratorProvider(context));
           print('✅ AiDesignGenerator initialized.');
 
           final outputUrl = await generator.generateFromExteriorForm();
+
+          setState(() => _isLoading = false);
 
           if (outputUrl != null && context.mounted) {
             context.goNamed(RouterConstants.aiResult, extra: outputUrl);
@@ -71,7 +75,20 @@ class _ExteriorDesignPageState extends ConsumerState<ExteriorDesignPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(child: steps[_currentStep]),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            steps[_currentStep],
+            if (_isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.4),
+                child: const Center(
+                  child: CircularProgressIndicator(color: Colors.redAccent),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

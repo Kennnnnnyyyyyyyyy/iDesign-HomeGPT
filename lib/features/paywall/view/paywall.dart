@@ -19,15 +19,25 @@ class _PaywallPageState extends State<PaywallPage> {
     'assets/create/ro3.jpeg',
   ];
 
+  static const yearlyWithTrial = 'yearly_3d_freetrial';
+  static const weeklyWithTrial = 'weekly_3d_freetrial';
+  static const weeklyWithoutTrial = 'weekly_nofreetrial';
+  static const entitlementID = 'premium_access_homegpt';
+
   late Timer _timer;
   int _currentPage = 0;
-
   bool _isTrialEnabled = true;
+  bool _isWeeklyTrialEligible = true;
   String _selectedPlan = 'yearly';
 
   @override
   void initState() {
     super.initState();
+    _checkTrialEligibility();
+    _startCarousel();
+  }
+
+  void _startCarousel() {
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (_pageController.hasClients) {
         _currentPage = (_currentPage + 1) % images.length;
@@ -40,6 +50,25 @@ class _PaywallPageState extends State<PaywallPage> {
     });
   }
 
+  Future<void> _checkTrialEligibility() async {
+    try {
+      final qonversion = Qonversion.getSharedInstance();
+      final eligibility = await qonversion.checkTrialIntroEligibility([
+        weeklyWithTrial,
+      ]);
+
+      final status = eligibility[weeklyWithTrial]?.status;
+      setState(() {
+        _isWeeklyTrialEligible = status == QEligibilityStatus.eligible;
+        if (!_isWeeklyTrialEligible) {
+          _isTrialEnabled = false; // Disable toggle state
+        }
+      });
+    } catch (e) {
+      print("⚠️ Failed to check trial eligibility: $e");
+    }
+  }
+
   @override
   void dispose() {
     _timer.cancel();
@@ -48,28 +77,24 @@ class _PaywallPageState extends State<PaywallPage> {
   }
 
   Future<void> _handlePurchase() async {
-    final qonversionProductId =
+    String productId =
         _selectedPlan == 'yearly'
-            ? 'yearly_3d_freetrial'
-            : 'weekly-nofreetrial';
+            ? yearlyWithTrial
+            : (_isTrialEnabled ? weeklyWithTrial : weeklyWithoutTrial);
 
     try {
       final qonversion = Qonversion.getSharedInstance();
       final products = await qonversion.products();
-      final product = products[qonversionProductId];
-      if (product == null) {
-        throw Exception("Product not found for ID: $qonversionProductId");
-      }
+      final product = products[productId];
+      if (product == null) throw Exception("Product not found: $productId");
 
       final purchaseModel = QPurchaseModel(product.qonversionId);
-      final result = await qonversion.purchase(purchaseModel);
-      final entitlement = result['premium_access_homegpt'];
+      final entitlements = await qonversion.purchase(purchaseModel);
+      final entitlement = entitlements[entitlementID];
 
       if (entitlement?.isActive ?? false) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Subscription activated successfully!'),
-          ),
+          const SnackBar(content: Text('✅ Subscription activated!')),
         );
         context.goNamed(RouterConstants.home);
       } else {
@@ -78,7 +103,7 @@ class _PaywallPageState extends State<PaywallPage> {
         );
       }
     } catch (e) {
-      print('❌ Purchase failed: $e');
+      print("❌ Purchase failed: $e");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('❌ Purchase failed: $e')));
@@ -89,12 +114,12 @@ class _PaywallPageState extends State<PaywallPage> {
     try {
       final qonversion = Qonversion.getSharedInstance();
       final entitlements = await qonversion.restore();
-      final entitlement = entitlements['premium_access_homegpt'];
+      final entitlement = entitlements[entitlementID];
 
       if (entitlement?.isActive ?? false) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Purchases successfully restored!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('✅ Purchases restored!')));
         context.goNamed(RouterConstants.home);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -102,7 +127,7 @@ class _PaywallPageState extends State<PaywallPage> {
         );
       }
     } catch (e) {
-      print('❌ Restore failed: $e');
+      print("❌ Restore failed: $e");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('❌ Restore failed: $e')));
@@ -124,7 +149,7 @@ class _PaywallPageState extends State<PaywallPage> {
                 const SizedBox(height: 16),
                 _buildFeatures(),
                 const SizedBox(height: 24),
-                _buildFreeTrialToggle(),
+                _buildFreeTrialToggle(), // ✅ Always show toggle now
                 const SizedBox(height: 12),
                 _buildPlanSelection(),
                 const SizedBox(height: 24),
@@ -202,12 +227,15 @@ class _PaywallPageState extends State<PaywallPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const Text(
-            "Enable free trial",
+            "Free trial enabled",
             style: TextStyle(color: Colors.white),
           ),
           Switch(
             value: _isTrialEnabled,
-            onChanged: (value) => setState(() => _isTrialEnabled = value),
+            onChanged:
+                _isWeeklyTrialEligible
+                    ? (value) => setState(() => _isTrialEnabled = value)
+                    : null,
             activeColor: Colors.red,
           ),
         ],
@@ -215,7 +243,6 @@ class _PaywallPageState extends State<PaywallPage> {
     );
   }
 
-  // Updated buildPlanSelection with dynamic weekly title
   Widget _buildPlanSelection() {
     return Column(
       children: [
@@ -235,9 +262,10 @@ class _PaywallPageState extends State<PaywallPage> {
           onTap: () => setState(() => _selectedPlan = 'weekly'),
           child: _PlanCard(
             title: _isTrialEnabled ? "3-DAYS FREE TRIAL" : "WEEKLY ACCESS",
-            subtitle: _isTrialEnabled ? null : "Pay as you go",
-            price: _isTrialEnabled ? "then \$12.99" : "\$12.99",
-            extraText: _isTrialEnabled ? "per week" : "per week",
+            subtitle:
+                _isTrialEnabled ? "then \$12.99 per week" : "\$12.99 per week",
+            price: "\$12.99",
+            extraText: "per week",
             highlight: _selectedPlan == 'weekly',
             bestOffer: false,
           ),
@@ -258,9 +286,19 @@ class _PaywallPageState extends State<PaywallPage> {
           ),
         ),
         onPressed: _handlePurchase,
-        child: const Text(
-          "Continue",
-          style: TextStyle(fontSize: 18, color: Colors.white),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _isTrialEnabled && _selectedPlan == 'weekly'
+                  ? "Try for Free"
+                  : "Continue",
+              style: const TextStyle(fontSize: 18, color: Colors.white),
+            ),
+            const SizedBox(width: 8),
+            if (_isTrialEnabled && _selectedPlan == 'weekly')
+              const Icon(Icons.arrow_forward, color: Colors.white),
+          ],
         ),
       ),
     );
@@ -287,10 +325,10 @@ class _PaywallPageState extends State<PaywallPage> {
   }
 }
 
+// ✅ Feature Item Widget
 class _FeatureItem extends StatelessWidget {
   final String text;
   const _FeatureItem(this.text);
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -306,13 +344,11 @@ class _FeatureItem extends StatelessWidget {
   }
 }
 
+// ✅ Plan Card Widget
 class _PlanCard extends StatelessWidget {
-  final String title;
+  final String title, price, extraText;
   final String? subtitle;
-  final String price;
-  final String extraText;
-  final bool highlight;
-  final bool bestOffer;
+  final bool highlight, bestOffer;
 
   const _PlanCard({
     required this.title,

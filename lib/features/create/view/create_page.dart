@@ -165,74 +165,109 @@ class _CreatePageState extends ConsumerState<CreatePage> {
             final portraitWidth = (maxHeight * 9 / 16).clamp(0, maxWidth);
             final portraitHeight = portraitWidth * 16 / 9;
 
-            return Center(
-              child: SizedBox(
-                width: portraitWidth.toDouble(),
-                height: portraitHeight,
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        children: [
-                          if (_currentStep > 0)
-                            IconButton(
-                              icon: const Icon(Icons.arrow_back),
-                              onPressed: _prevStep,
-                            )
-                          else
-                            const SizedBox(width: 48),
-                          Expanded(
-                            child: Center(
-                              child: Text(
-                                "Step ${_currentStep + 1} of ${steps.length}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+            return Stack(
+              children: [
+                Center(
+                  child: SizedBox(
+                    width: portraitWidth.toDouble(),
+                    height: portraitHeight,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            children: [
+                              GestureDetector(
+                                onTap:
+                                    () => context.goNamed(
+                                      RouterConstants.paywall,
+                                    ),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.redAccent,
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  child: const Text(
+                                    'PRO',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
                                 ),
                               ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Center(
+                                  child: Text(
+                                    "Step ${_currentStep + 1} of ${steps.length}",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.black,
+                                ),
+                                onPressed:
+                                    () => context.goNamed(RouterConstants.home),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: steps[_currentStep],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _nextStep,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.redAccent,
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size.fromHeight(56),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            child: Text(
+                              _currentStep < steps.length - 1
+                                  ? 'Continue'
+                                  : 'Generate Design',
+                              style: const TextStyle(fontSize: 18),
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed:
-                                () => context.goNamed(RouterConstants.home),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: steps[_currentStep],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _nextStep,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(56),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
                         ),
-                        child: Text(
-                          _currentStep < steps.length - 1
-                              ? 'Continue'
-                              : 'Generate Design',
-                          style: const TextStyle(fontSize: 18),
-                        ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                if (_isLoading)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.black.withOpacity(0.4),
+                      child: const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      ),
+                    ),
+                  ),
+              ],
             );
           },
         ),

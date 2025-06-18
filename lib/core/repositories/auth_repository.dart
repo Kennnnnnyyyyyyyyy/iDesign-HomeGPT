@@ -1,49 +1,63 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthRepository {
-  static const _uidKey = 'anonymous_uid';
-
   final SupabaseClient supabase;
+  final FlutterSecureStorage storage;
 
-  AuthRepository(this.supabase);
+  AuthRepository(this.supabase, this.storage);
+
+  static const String _storageKey = 'anonymous_uid';
 
   Future<String> getOrCreateAnonymousUser() async {
-    final prefs = await SharedPreferences.getInstance();
+    final savedUid = await storage.read(key: _storageKey);
 
-    // Try to recover session first
-    final currentUser = supabase.auth.currentUser;
-    if (currentUser != null) {
-      await prefs.setString(
-        _uidKey,
-        currentUser.id,
-      ); // sync storage just in case
-      return currentUser.id;
+    if (savedUid != null) {
+      await _upsertFirebaseUser(savedUid); // update last_sign_in
+      return savedUid;
     }
 
-    // Check SharedPreferences for UID
-    final cachedUid = prefs.getString(_uidKey);
-    if (cachedUid != null) {
-      // You can use cachedUid for identifying the user even if session expired
-      // Optionally: re-authenticate silently if Supabase allows
-      return cachedUid;
-    }
-
-    // No UID found: create new anonymous user
     final result = await supabase.auth.signInAnonymously();
-    final user = result.user;
+    final uid = result.user?.id;
 
-    if (user == null) {
-      throw Exception('Anonymous sign-in failed');
+    if (uid != null) {
+      await storage.write(key: _storageKey, value: uid);
+      await _upsertFirebaseUser(uid); // insert new user
+      return uid;
+    } else {
+      throw Exception("Anonymous sign-in failed");
     }
+  }
 
-    await prefs.setString(_uidKey, user.id);
-    return user.id;
+  Future<void> _upsertFirebaseUser(String uid) async {
+    try {
+      final existingUser =
+          await supabase
+              .from('firebase_users')
+              .select('uid')
+              .eq('uid', uid)
+              .maybeSingle();
+
+      if (existingUser != null) {
+        // update last_sign_in
+        await supabase
+            .from('firebase_users')
+            .update({'last_sign_in': DateTime.now().toIso8601String()})
+            .eq('uid', uid);
+        print('🔁 Updated last_sign_in for existing user');
+      } else {
+        // insert new user
+        await supabase.from('firebase_users').insert({
+          'uid': uid,
+          'email': '',
+          'sign_in_provider': 'anonymous',
+          'first_sign_in': DateTime.now().toIso8601String(),
+          'last_sign_in': DateTime.now().toIso8601String(),
+        });
+        print('🆕 Inserted new anonymous user into firebase_users');
+      }
+    } catch (e) {
+      print('❌ Error syncing firebase_users: $e');
+    }
   }
 }
-
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final supabase = Supabase.instance.client;
-  return AuthRepository(supabase);
-});

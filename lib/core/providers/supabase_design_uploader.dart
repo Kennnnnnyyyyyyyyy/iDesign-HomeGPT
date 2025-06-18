@@ -12,22 +12,32 @@ class AiDesignDatabaseUploader {
     required String outputUrl,
   }) async {
     final uid = supabase.auth.currentUser?.id;
+
+    print('🔍 Supabase current user UID: $uid');
+
     if (uid == null) {
       print('❌ No Supabase user signed in.');
       return;
     }
 
-    try {
-      await supabase.from('ai_designs').insert({
-        'prompt': prompt,
-        'output_url': outputUrl,
-        'supabase_uid': uid,
-        'created_at': DateTime.now().toIso8601String(),
-      });
+    final data = {
+      'prompt': prompt,
+      'output_url': outputUrl,
+      'image_url': imageUrl,
+      'supabase_uid': uid,
+      'created_at': DateTime.now().toIso8601String(),
+    };
 
-      print('✅ Design inserted into ai_designs table.');
+    print('📦 Prepared data for insertion: $data');
+
+    try {
+      final response = await supabase.from('ai_designs').insert(data);
+      print('✅ Design inserted successfully. Supabase response: $response');
+    } on PostgrestException catch (e) {
+      print('❌ PostgrestException: ${e.message}');
+      print('🔧 Details: code=${e.code}, hint=${e.hint}, details=${e.details}');
     } catch (e) {
-      print('❌ Error inserting design: $e');
+      print('❌ Unexpected error during design insertion: $e');
     }
   }
 }

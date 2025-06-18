@@ -1,6 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart'
-    show AsyncNotifier, AsyncNotifierProvider;
-import 'package:interior_designer_jasper/core/repositories/auth_repository.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interior_designer_jasper/features/auth/providers/auth_provider.dart';
 
 class AuthNotifier extends AsyncNotifier<String> {
   @override

@@ -87,6 +87,29 @@ class _PaintPageState extends State<PaintPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
+                  // PRO Badge Button
+                  GestureDetector(
+                    onTap: () => context.goNamed(RouterConstants.paywall),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: const Text(
+                        'PRO',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ),
                   const Spacer(),
                   const Text(
                     'Paint',
@@ -100,6 +123,7 @@ class _PaintPageState extends State<PaintPage> {
                 ],
               ),
             ),
+
             ClipRRect(
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(24),

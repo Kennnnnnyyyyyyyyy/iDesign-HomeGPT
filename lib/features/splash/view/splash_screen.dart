@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interior_designer_jasper/features/auth/providers/auth_provider.dart';
+import 'package:interior_designer_jasper/features/auth/viewmodel/auth_notifier.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
