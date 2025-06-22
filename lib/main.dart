@@ -15,11 +15,12 @@ void main() async {
             'kDuejpRZMwJPkDZcr8t3k6sahysiYbNq',
             QLaunchMode.subscriptionManagement,
           )
-          .setEnvironment(QEnvironment.sandbox) // For testing only
+          .setEnvironment(QEnvironment.production) // For testing only
           .build();
   Qonversion.initialize(config);
+
   await dotenv.load();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,

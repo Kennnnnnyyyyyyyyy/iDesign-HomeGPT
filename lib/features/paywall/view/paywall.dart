@@ -12,6 +12,7 @@ class PaywallPage extends StatefulWidget {
 }
 
 class _PaywallPageState extends State<PaywallPage> {
+  List<QProduct> _availableProducts = [];
   final PageController _pageController = PageController(viewportFraction: 0.8);
   final List<String> images = [
     'assets/create/ro1.jpeg',
@@ -19,15 +20,13 @@ class _PaywallPageState extends State<PaywallPage> {
     'assets/create/ro3.jpeg',
   ];
 
-  static const yearlyWithTrial = 'yearly_3d_freetrial';
-  static const weeklyWithTrial = 'weekly_3d_freetrial';
-  static const weeklyWithoutTrial = 'weekly_nofreetrial';
-  static const entitlementID = 'premium_access_homegpt';
+  static const yearlyWithTrial = 'yearly_3day_trial';
+  static const weeklyWithoutTrial = 'weekly';
+  static const entitlementID = 'premium';
 
   late Timer _timer;
   int _currentPage = 0;
   bool _isTrialEnabled = true;
-  bool _isWeeklyTrialEligible = true;
   String _selectedPlan = 'yearly';
 
   @override
@@ -35,6 +34,12 @@ class _PaywallPageState extends State<PaywallPage> {
     super.initState();
     _checkTrialEligibility();
     _startCarousel();
+    _initializeOfferingsAndLog();
+  }
+
+  Future<void> _initializeOfferingsAndLog() async {
+    await _fetchOfferings();
+    await _debugPrintQonversionProducts();
   }
 
   void _startCarousel() {
@@ -54,18 +59,15 @@ class _PaywallPageState extends State<PaywallPage> {
     try {
       final qonversion = Qonversion.getSharedInstance();
       final eligibility = await qonversion.checkTrialIntroEligibility([
-        weeklyWithTrial,
+        yearlyWithTrial,
       ]);
 
-      final status = eligibility[weeklyWithTrial]?.status;
+      final status = eligibility[yearlyWithTrial]?.status;
       setState(() {
-        _isWeeklyTrialEligible = status == QEligibilityStatus.eligible;
-        if (!_isWeeklyTrialEligible) {
-          _isTrialEnabled = false; // Disable toggle state
-        }
+        _isTrialEnabled = status == QEligibilityStatus.eligible;
       });
     } catch (e) {
-      print("⚠️ Failed to check trial eligibility: $e");
+      debugPrint("⚠️ Failed to check trial eligibility: $e");
     }
   }
 
@@ -76,20 +78,56 @@ class _PaywallPageState extends State<PaywallPage> {
     super.dispose();
   }
 
+  Future<void> _fetchOfferings() async {
+    try {
+      final offerings = await Qonversion.getSharedInstance().offerings();
+      final mainOffering = offerings.main;
+
+      if (mainOffering != null && mainOffering.products.isNotEmpty) {
+        setState(() {
+          _availableProducts = mainOffering.products;
+        });
+
+        for (var product in mainOffering.products) {
+          print("🔹 Qonversion ID: ${product.qonversionId}");
+          print("🔹 Store ID: ${product.storeId}");
+          print("🔹 Price: ${product.prettyPrice}");
+          print("------");
+        }
+      } else {
+        print("⚠️ No products found in Main Offering.");
+      }
+    } catch (e) {
+      print("❌ Failed to fetch offerings: $e");
+    }
+  }
+
+  Future<void> _debugPrintQonversionProducts() async {
+    try {
+      final products = await Qonversion.getSharedInstance().products();
+      debugPrint("🛒 Available Qonversion products:");
+      products.forEach((key, product) {
+        debugPrint("🔑 key: $key");
+        debugPrint("↳ Qonversion ID: ${product.qonversionId}");
+        debugPrint("↳ Store ID: ${product.storeId}");
+      });
+    } catch (e) {
+      debugPrint("❌ Failed to fetch products: $e");
+    }
+  }
+
   Future<void> _handlePurchase() async {
-    String productId =
-        _selectedPlan == 'yearly'
-            ? yearlyWithTrial
-            : (_isTrialEnabled ? weeklyWithTrial : weeklyWithoutTrial);
+    final productId =
+        _selectedPlan == 'yearly' ? yearlyWithTrial : weeklyWithoutTrial;
 
     try {
-      final qonversion = Qonversion.getSharedInstance();
-      final products = await qonversion.products();
+      final products = await Qonversion.getSharedInstance().products();
       final product = products[productId];
       if (product == null) throw Exception("Product not found: $productId");
 
-      final purchaseModel = QPurchaseModel(product.qonversionId);
-      final entitlements = await qonversion.purchase(purchaseModel);
+      final entitlements = await Qonversion.getSharedInstance().purchase(
+        QPurchaseModel(product.qonversionId),
+      );
       final entitlement = entitlements[entitlementID];
 
       if (entitlement?.isActive ?? false) {
@@ -103,17 +141,16 @@ class _PaywallPageState extends State<PaywallPage> {
         );
       }
     } catch (e) {
-      print("❌ Purchase failed: $e");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('❌ Purchase failed: $e')));
+      debugPrint("❌ Purchase failed: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Premium features coming soon. Stay tuned!')),
+      );
     }
   }
 
   Future<void> _handleRestore() async {
     try {
-      final qonversion = Qonversion.getSharedInstance();
-      final entitlements = await qonversion.restore();
+      final entitlements = await Qonversion.getSharedInstance().restore();
       final entitlement = entitlements[entitlementID];
 
       if (entitlement?.isActive ?? false) {
@@ -123,11 +160,13 @@ class _PaywallPageState extends State<PaywallPage> {
         context.goNamed(RouterConstants.home);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('❌ No purchases to restore')),
+          const SnackBar(
+            content: Text('Premium features coming soon. Stay tuned!'),
+          ),
         );
       }
     } catch (e) {
-      print("❌ Restore failed: $e");
+      debugPrint("❌ Restore failed: $e");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('❌ Restore failed: $e')));
@@ -135,216 +174,185 @@ class _PaywallPageState extends State<PaywallPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 24),
-            child: Column(
-              children: [
-                _buildTopBar(),
-                _buildCarousel(),
-                const SizedBox(height: 16),
-                _buildFeatures(),
-                const SizedBox(height: 24),
-                _buildFreeTrialToggle(), // ✅ Always show toggle now
-                const SizedBox(height: 12),
-                _buildPlanSelection(),
-                const SizedBox(height: 24),
-                const Text(
-                  "Cancel Anytime",
-                  style: TextStyle(color: Colors.white54),
-                ),
-                const SizedBox(height: 16),
-                _buildContinueButton(),
-                const SizedBox(height: 12),
-                _buildRestoreButton(),
-                const SizedBox(height: 16),
-                const Text(
-                  "Terms • Privacy",
-                  style: TextStyle(color: Colors.white38),
-                ),
-              ],
-            ),
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: Colors.black,
+    body: SafeArea(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: Column(
+            children: [
+              _buildTopBar(),
+              _buildCarousel(),
+              const SizedBox(height: 16),
+              _buildFeatures(),
+              const SizedBox(height: 24),
+              if (_selectedPlan == 'yearly') _buildFreeTrialToggle(),
+              const SizedBox(height: 12),
+              _buildPlanSelection(),
+              const SizedBox(height: 24),
+              const Text(
+                "Cancel Anytime",
+                style: TextStyle(color: Colors.white54),
+              ),
+              const SizedBox(height: 16),
+              _buildContinueButton(),
+              const SizedBox(height: 12),
+              _buildRestoreButton(),
+              const SizedBox(height: 16),
+              const Text(
+                "Terms • Privacy",
+                style: TextStyle(color: Colors.white38),
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 
-  Widget _buildTopBar() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const SizedBox(width: 50),
-        const Spacer(),
-        IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
-          onPressed: () => context.goNamed(RouterConstants.home),
-        ),
-      ],
-    );
-  }
+  Widget _buildTopBar() => Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      const SizedBox(width: 50),
+      const Spacer(),
+      IconButton(
+        icon: const Icon(Icons.close, color: Colors.white),
+        onPressed: () => context.goNamed(RouterConstants.home),
+      ),
+    ],
+  );
 
-  Widget _buildCarousel() {
-    return SizedBox(
-      height: 240,
-      child: PageView.builder(
-        controller: _pageController,
-        itemCount: images.length,
-        itemBuilder: (context, index) {
-          return Padding(
+  Widget _buildCarousel() => SizedBox(
+    height: 240,
+    child: PageView.builder(
+      controller: _pageController,
+      itemCount: images.length,
+      itemBuilder:
+          (context, index) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Image.asset(images[index], fit: BoxFit.cover),
             ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildFeatures() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: const [
-          _FeatureItem("Faster Rendering"),
-          _FeatureItem("Ad-free Experience"),
-          _FeatureItem("Unlimited Design Renders"),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFreeTrialToggle() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            "Free trial enabled",
-            style: TextStyle(color: Colors.white),
           ),
-          Switch(
-            value: _isTrialEnabled,
-            onChanged:
-                _isWeeklyTrialEligible
-                    ? (value) => setState(() => _isTrialEnabled = value)
-                    : null,
-            activeColor: Colors.red,
-          ),
-        ],
-      ),
-    );
-  }
+    ),
+  );
 
-  Widget _buildPlanSelection() {
-    return Column(
+  Widget _buildFeatures() => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 24),
+    child: Column(
+      children: const [
+        _FeatureItem("Faster Rendering"),
+        _FeatureItem("Ad-free Experience"),
+        _FeatureItem("Unlimited Design Renders"),
+      ],
+    ),
+  );
+
+  Widget _buildFreeTrialToggle() => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 24),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        GestureDetector(
-          onTap: () => setState(() => _selectedPlan = 'yearly'),
-          child: _PlanCard(
-            title: "YEARLY ACCESS",
-            subtitle: "Just \$49.99 per year",
-            price: "\$0.99",
-            extraText: "per week",
-            highlight: _selectedPlan == 'yearly',
-            bestOffer: true,
-          ),
-        ),
-        const SizedBox(height: 12),
-        GestureDetector(
-          onTap: () => setState(() => _selectedPlan = 'weekly'),
-          child: _PlanCard(
-            title: _isTrialEnabled ? "3-DAYS FREE TRIAL" : "WEEKLY ACCESS",
-            subtitle:
-                _isTrialEnabled ? "then \$12.99 per week" : "\$12.99 per week",
-            price: "\$12.99",
-            extraText: "per week",
-            highlight: _selectedPlan == 'weekly',
-            bestOffer: false,
-          ),
+        const Text("Free trial enabled", style: TextStyle(color: Colors.white)),
+        Switch(
+          value: _isTrialEnabled,
+          onChanged: (value) => setState(() => _isTrialEnabled = value),
+          activeColor: Colors.red,
         ),
       ],
-    );
-  }
+    ),
+  );
 
-  Widget _buildContinueButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
-          minimumSize: const Size(double.infinity, 56),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        onPressed: _handlePurchase,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              _isTrialEnabled && _selectedPlan == 'weekly'
-                  ? "Try for Free"
-                  : "Continue",
-              style: const TextStyle(fontSize: 18, color: Colors.white),
-            ),
-            const SizedBox(width: 8),
-            if (_isTrialEnabled && _selectedPlan == 'weekly')
-              const Icon(Icons.arrow_forward, color: Colors.white),
-          ],
+  Widget _buildPlanSelection() => Column(
+    children: [
+      GestureDetector(
+        onTap: () => setState(() => _selectedPlan = 'yearly'),
+        child: _PlanCard(
+          title: _isTrialEnabled ? "3-DAYS FREE TRIAL" : "YEARLY ACCESS",
+          subtitle:
+              _isTrialEnabled ? "then \$49.99 per year" : "\$49.99 per year",
+          price: _isTrialEnabled ? "\$0.00" : "\$49.99",
+          extraText: _isTrialEnabled ? "Trial – then yearly" : "per year",
+          highlight: _selectedPlan == 'yearly',
+          bestOffer: true,
         ),
       ),
-    );
-  }
-
-  Widget _buildRestoreButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.grey.shade800,
-          minimumSize: const Size(double.infinity, 56),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        onPressed: _handleRestore,
-        child: const Text(
-          "Restore Purchases",
-          style: TextStyle(fontSize: 18, color: Colors.white),
+      const SizedBox(height: 12),
+      GestureDetector(
+        onTap: () => setState(() => _selectedPlan = 'weekly'),
+        child: _PlanCard(
+          title: "WEEKLY ACCESS",
+          subtitle: "\$12.99 per week",
+          price: "\$12.99",
+          extraText: "per week",
+          highlight: _selectedPlan == 'weekly',
+          bestOffer: false,
         ),
       ),
-    );
-  }
+    ],
+  );
+
+  Widget _buildContinueButton() => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 24),
+    child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.red,
+        minimumSize: const Size(double.infinity, 56),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      onPressed: _handlePurchase,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            _isTrialEnabled && _selectedPlan == 'yearly'
+                ? "Try for Free"
+                : "Continue",
+            style: const TextStyle(fontSize: 18, color: Colors.white),
+          ),
+          const SizedBox(width: 8),
+          const Icon(Icons.arrow_forward, color: Colors.white),
+        ],
+      ),
+    ),
+  );
+
+  Widget _buildRestoreButton() => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 24),
+    child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.grey.shade800,
+        minimumSize: const Size(double.infinity, 56),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      onPressed: _handleRestore,
+      child: const Text(
+        "Restore Purchases",
+        style: TextStyle(fontSize: 18, color: Colors.white),
+      ),
+    ),
+  );
 }
 
-// ✅ Feature Item Widget
 class _FeatureItem extends StatelessWidget {
   final String text;
   const _FeatureItem(this.text);
+
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, color: Colors.white, size: 20),
-          const SizedBox(width: 12),
-          Text(text, style: const TextStyle(color: Colors.white)),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      children: [
+        const Icon(Icons.check_circle, color: Colors.white, size: 20),
+        const SizedBox(width: 12),
+        Text(text, style: const TextStyle(color: Colors.white)),
+      ],
+    ),
+  );
 }
 
-// ✅ Plan Card Widget
 class _PlanCard extends StatelessWidget {
   final String title, price, extraText;
   final String? subtitle;
@@ -360,71 +368,66 @@ class _PlanCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: highlight ? Colors.red.shade900 : Colors.grey.shade900,
-        borderRadius: BorderRadius.circular(12),
-        border:
-            highlight ? Border.all(color: Colors.redAccent, width: 1.2) : null,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (subtitle != null)
-                  Text(
-                    subtitle!,
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.symmetric(horizontal: 24),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: highlight ? Colors.red.shade900 : Colors.grey.shade900,
+      borderRadius: BorderRadius.circular(12),
+      border:
+          highlight ? Border.all(color: Colors.redAccent, width: 1.2) : null,
+    ),
+    child: Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (bestOffer)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.redAccent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    "BEST OFFER",
-                    style: TextStyle(color: Colors.white, fontSize: 10),
-                  ),
-                ),
               Text(
-                price,
+                title,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Text(
-                extraText,
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
-              ),
+              if (subtitle != null)
+                Text(
+                  subtitle!,
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                ),
             ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (bestOffer)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  "BEST OFFER",
+                  style: TextStyle(color: Colors.white, fontSize: 10),
+                ),
+              ),
+            Text(
+              price,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              extraText,
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
 }
