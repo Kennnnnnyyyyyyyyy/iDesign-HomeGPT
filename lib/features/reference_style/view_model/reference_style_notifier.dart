@@ -109,8 +109,11 @@ class ReferenceStyleNotifier extends AsyncNotifier<String?> {
 
       await supabase.from('ai_designs').insert({
         'prompt': 'Reference style design',
+        'image_url': roomPhotoUrl, // 📸 Original room image uploaded by user
+        'output_url':
+            supabaseHostedUrl, // 🧠 AI-generated + Supabase-hosted image
         'supabase_uid': uid,
-        'created_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toUtc().toIso8601String(),
       });
 
       print('✅ Design inserted into ai_designs table');

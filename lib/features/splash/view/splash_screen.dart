@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:interior_designer_jasper/features/auth/providers/auth_provider.dart';
 import 'package:interior_designer_jasper/features/auth/viewmodel/auth_notifier.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
 
@@ -17,16 +16,26 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void initState() {
     super.initState();
 
-    Future.delayed(const Duration(seconds: 2), () async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
-        final uid = await ref.read(authNotifierProvider.future);
+        // Step 1: Wait for both sign-in and loading animation
+        final loginFuture =
+            ref.read(authNotifierProvider.notifier).signInAnonymously();
+        final animationFuture = Future.delayed(const Duration(seconds: 2));
 
-        // ✅ Successful
-        context.goNamed(RouterConstants.home);
+        // Step 2: Wait for both to complete
+        final results = await Future.wait([loginFuture, animationFuture]);
+
+        // Step 3: Navigate to Home
+        if (mounted) {
+          context.goNamed(RouterConstants.home);
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Anonymous sign-in failed: $e')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('❌ Startup failed: $e')));
+        }
       }
     });
   }
