@@ -200,10 +200,10 @@ class _PaywallPageState extends State<PaywallPage> {
               const SizedBox(height: 12),
               _buildRestoreButton(),
               const SizedBox(height: 16),
-              const Text(
-                "Terms • Privacy",
-                style: TextStyle(color: Colors.white38),
-              ),
+              // const Text(
+              //   "Terms • Privacy",
+              //   style: TextStyle(color: Colors.white38),
+              // ),
             ],
           ),
         ),
