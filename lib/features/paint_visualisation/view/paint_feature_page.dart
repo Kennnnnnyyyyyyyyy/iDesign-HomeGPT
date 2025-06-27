@@ -83,33 +83,11 @@ class _PaintPageState extends State<PaintPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ✅ Clean Header without PRO
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  // PRO Badge Button
-                  GestureDetector(
-                    onTap: () => context.goNamed(RouterConstants.paywall),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: const Text(
-                        'PRO',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ),
-                  ),
                   const Spacer(),
                   const Text(
                     'Paint',
@@ -169,6 +147,7 @@ class _PaintPageState extends State<PaintPage> {
                 ],
               ),
             ),
+
             const SizedBox(height: 24),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
