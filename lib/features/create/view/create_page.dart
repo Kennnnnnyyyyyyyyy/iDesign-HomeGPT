@@ -11,6 +11,7 @@ import 'package:interior_designer_jasper/features/create/view/widgets/step2_room
 import 'package:interior_designer_jasper/features/create/view/widgets/step3_style_selection.dart';
 import 'package:interior_designer_jasper/features/create/view/widgets/step4_palette_selection.dart';
 import 'package:interior_designer_jasper/routes/router_constants.dart';
+import 'package:interior_designer_jasper/services/generation_limit_service.dart';
 
 class CreatePage extends ConsumerStatefulWidget {
   const CreatePage({super.key});
@@ -23,6 +24,7 @@ class _CreatePageState extends ConsumerState<CreatePage> {
   int _currentStep = 0;
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
+  final GenerationLimitService _limitService = GenerationLimitService();
 
   Future<void> _pickImage(ImageSource source) async {
     final XFile? image = await _picker.pickImage(source: source);
@@ -108,6 +110,12 @@ class _CreatePageState extends ConsumerState<CreatePage> {
     if (_currentStep < 3) {
       setState(() => _currentStep++);
     } else {
+      final count = await _limitService.getGenerationCount();
+      if (count >= 5) {
+        if (mounted) context.goNamed(RouterConstants.paywall);
+        return;
+      }
+      await _limitService.incrementGenerationCount();
       setState(() => _isLoading = true);
       final finalUrl = await ref.read(aiPipelineProvider(context)).execute();
       setState(() => _isLoading = false);

@@ -17,18 +17,12 @@ class BottomNavBar extends StatelessWidget {
             context.goNamed(RouterConstants.home); // Tools
             break;
           case 1:
-            context.goNamed(
-              RouterConstants.create,
-            ); // ✅ Navigate to Create page
-            break;
-          case 2:
             context.goNamed(RouterConstants.profile); // Profile
             break;
         }
       },
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.style), label: 'Tools'),
-        BottomNavigationBarItem(icon: Icon(Icons.layers), label: 'Create'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'My Profile'),
       ],
     );
@@ -37,11 +31,9 @@ class BottomNavBar extends StatelessWidget {
   int _getCurrentIndex(BuildContext context) {
     final routeName = ModalRoute.of(context)?.settings.name;
 
-    if (routeName == RouterConstants.profile) return 2;
+    if (routeName == RouterConstants.profile) return 1;
     if (routeName == RouterConstants.home) return 0;
-    if (routeName == RouterConstants.create)
-      return 1; // ✅ highlight Create tab when active
 
-    return 1; // Default to Create
+    return 0; // Default to Tools
   }
 }

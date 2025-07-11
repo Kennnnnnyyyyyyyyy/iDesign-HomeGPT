@@ -15,7 +15,7 @@ void main() async {
             'kDuejpRZMwJPkDZcr8t3k6sahysiYbNq',
             QLaunchMode.subscriptionManagement,
           )
-          .setEnvironment(QEnvironment.production) // For testing only
+          .setEnvironment(QEnvironment.sandbox) // For testing only
           .build();
   Qonversion.initialize(config);
 

@@ -80,25 +80,33 @@ class _PaywallPageState extends State<PaywallPage> {
 
   Future<void> _fetchOfferings() async {
     try {
-      final offerings = await Qonversion.getSharedInstance().offerings();
-      final mainOffering = offerings.main;
+      final QOfferings offerings =
+          await Qonversion.getSharedInstance().offerings();
+      final QOffering? homegptOffering = offerings.offeringForIdentifier(
+        "homegpt",
+      );
 
-      if (mainOffering != null && mainOffering.products.isNotEmpty) {
+      if (homegptOffering != null && homegptOffering.products.isNotEmpty) {
         setState(() {
-          _availableProducts = mainOffering.products;
+          _availableProducts = homegptOffering.products;
         });
 
-        for (var product in mainOffering.products) {
-          print("🔹 Qonversion ID: ${product.qonversionId}");
-          print("🔹 Store ID: ${product.storeId}");
-          print("🔹 Price: ${product.prettyPrice}");
-          print("------");
+        for (var product in homegptOffering.products) {
+          debugPrint("🔹 Qonversion ID: ${product.qonversionId}");
+          debugPrint("🔹 Store ID (SKU): ${product.storeId}");
+          debugPrint("🔹 Pretty Price: ${product.prettyPrice}");
+          debugPrint("🔹 Sku details: ${product.skuDetails}");
+          debugPrint("🔹 Trial Duration: ${product.trialPeriod}");
+
+          debugPrint("🔹 Type: ${product.type}");
+          debugPrint("🔹 Offering ID: ${homegptOffering.id}");
+          debugPrint("------");
         }
       } else {
-        print("⚠️ No products found in Main Offering.");
+        debugPrint("⚠️ No products found in 'homegpt' offering.");
       }
     } catch (e) {
-      print("❌ Failed to fetch offerings: $e");
+      debugPrint("❌ Failed to fetch offerings: $e");
     }
   }
 
@@ -121,9 +129,24 @@ class _PaywallPageState extends State<PaywallPage> {
         _selectedPlan == 'yearly' ? yearlyWithTrial : weeklyWithoutTrial;
 
     try {
-      final products = await Qonversion.getSharedInstance().products();
-      final product = products[productId];
-      if (product == null) throw Exception("Product not found: $productId");
+      if (_availableProducts.isEmpty) {
+        throw Exception(
+          "❌ No products loaded from offerings. Ensure offering is correctly configured in Qonversion.",
+        );
+      }
+
+      final product = _availableProducts.firstWhere(
+        (p) => p.storeId == productId || p.qonversionId == productId,
+        orElse: () {
+          debugPrint("❌ Could not find product with ID: $productId");
+          throw Exception("Product not found in offering: $productId");
+        },
+      );
+
+      debugPrint("🧾 Initiating purchase for:");
+      debugPrint("🔹 Qonversion ID: ${product.qonversionId}");
+      debugPrint("🔹 Store ID: ${product.storeId}");
+      debugPrint("🔹 Pretty Price: ${product.price}");
 
       final entitlements = await Qonversion.getSharedInstance().purchase(
         QPurchaseModel(product.qonversionId),
@@ -142,9 +165,9 @@ class _PaywallPageState extends State<PaywallPage> {
       }
     } catch (e) {
       debugPrint("❌ Purchase failed: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Premium features coming soon. Stay tuned!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('❌ Purchase failed: $e')));
     }
   }
 
