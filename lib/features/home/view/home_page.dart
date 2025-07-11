@@ -63,20 +63,21 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
+        automaticallyImplyLeading: false,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 8, top: 8, bottom: 8),
+          padding: const EdgeInsets.only(left: 16),
           child: GestureDetector(
             onTap: () => context.goNamed(RouterConstants.paywall),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(
-                color: Colors.redAccent,
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Text(
+            child: Center(
+              child: Container(
+                width: 50,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.redAccent,
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: const Text(
                   'PRO',
                   style: TextStyle(
                     color: Colors.white,
@@ -84,6 +85,8 @@ class HomePage extends StatelessWidget {
                     fontSize: 13,
                     letterSpacing: 1,
                   ),
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
@@ -105,47 +108,37 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          const Text(
-            '👋 Welcome!',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Let\'s create something beautiful today.',
-            style: TextStyle(fontSize: 15, color: Colors.black54),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => context.goNamed(RouterConstants.create),
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text(
-              'Start New Project',
-              style: TextStyle(color: Colors.white),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: CustomScrollView(
+          slivers: [
+            // First Big Tile
+            SliverToBoxAdapter(
+              child: FeatureCard(
+                imagePath: features[0].image,
+                title: features[0].title,
+                subtitle: features[0].subtitle,
+                onPressed: () => context.goNamed(features[0].route),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () => context.goNamed(RouterConstants.profile),
-            icon: const Icon(Icons.photo_library, color: Colors.redAccent),
-            label: const Text(
-              'My Designs',
-              style: TextStyle(
-                color: Colors.redAccent,
-                fontWeight: FontWeight.bold,
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+            // First Grid (2 tiles)
+            SliverGrid(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final item = features[index + 1];
+                return FeatureCard(
+                  imagePath: item.image,
+                  title: item.title,
+                  subtitle: item.subtitle,
+                  onPressed: () => context.goNamed(item.route),
+                );
+              }, childCount: 2),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 0.9,
               ),
             ),
             style: ElevatedButton.styleFrom(

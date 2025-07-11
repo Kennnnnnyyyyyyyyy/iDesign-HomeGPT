@@ -119,33 +119,11 @@ class _Step1ExteriorPhotoState extends ConsumerState<Step1ExteriorPhoto> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          // 🔴 Header with PRO button on the left
+          // ✅ Updated Header without PRO button
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
             child: Row(
               children: [
-                GestureDetector(
-                  onTap: () => context.goNamed(RouterConstants.paywall),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: const Text(
-                      'PRO',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                ),
                 const Spacer(),
                 const Text(
                   'Step 1 / 4',

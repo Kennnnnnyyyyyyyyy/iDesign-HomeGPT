@@ -71,8 +71,8 @@ class _Step1AddRoomPhotoState extends ConsumerState<Step1AddRoomPhoto> {
   }
 
   double _getAspectRatio() {
-    if (_selectedAssetPath != null) return 1; // example photos 1:1
-    if (_selectedImageFile != null) return 9 / 16; // camera/gallery
+    if (_selectedAssetPath != null) return 1;
+    if (_selectedImageFile != null) return 9 / 16;
     return 9 / 16;
   }
 
@@ -143,32 +143,11 @@ class _Step1AddRoomPhotoState extends ConsumerState<Step1AddRoomPhoto> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          // AppBar
+          // ✅ Header without PRO
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                GestureDetector(
-                  onTap: () => context.goNamed(RouterConstants.paywall),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'PRO',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                ),
                 const Spacer(),
                 const Text(
                   'Reference Style (1 / 2)',
@@ -196,7 +175,7 @@ class _Step1AddRoomPhotoState extends ConsumerState<Step1AddRoomPhoto> {
             ),
           ),
 
-          // Upload Box with dynamic aspect ratio
+          // Upload Box
           Center(
             child: SizedBox(
               width: boxWidth,
@@ -239,9 +218,6 @@ class _Step1AddRoomPhotoState extends ConsumerState<Step1AddRoomPhoto> {
                                 ElevatedButton.icon(
                                   onPressed: _showImageSourceActionSheet,
                                   style: ElevatedButton.styleFrom(
-                                    textStyle: const TextStyle(
-                                      color: Colors.white,
-                                    ),
                                     backgroundColor: Colors.black,
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 20,

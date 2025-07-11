@@ -188,32 +188,6 @@ class _CreatePageState extends ConsumerState<CreatePage> {
                           ),
                           child: Row(
                             children: [
-                              GestureDetector(
-                                onTap:
-                                    () => context.goNamed(
-                                      RouterConstants.paywall,
-                                    ),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.redAccent,
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
-                                  child: const Text(
-                                    'PRO',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                      letterSpacing: 1,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
                               Expanded(
                                 child: Center(
                                   child: Text(
