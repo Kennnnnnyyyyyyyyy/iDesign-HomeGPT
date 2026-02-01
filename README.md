@@ -40,7 +40,9 @@ The home screen welcomes users and provides entry points to start a new design p
 
 Users begin by uploading a reference image or selecting from example photos. This image is used as the base input for AI driven transformation.
 
-![Step 1 Upload Image](Step1.PNG)
+<p align="center">
+  <img src="iDesign/Step1.PNG" width="300" alt="Step 1 Upload or Select Reference Image" />
+</p>
 
 ---
 
