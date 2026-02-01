@@ -64,7 +64,9 @@ Users choose a design style that defines the overall aesthetic of the generated 
 
 Examples include modern, contemporary, minimalist, Scandinavian, industrial, rustic, and vintage.
 
-![Step 3 Select Style](Step3.PNG)
+<p align="center">
+  <img src="iDesign/Step3.PNG" width="300" alt="Step 3 Select Design Style" />
+</p>
 
 ---
 
