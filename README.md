@@ -52,7 +52,9 @@ Users select the type of room they want to design. This selection helps tailor t
 
 Supported room types include living room, bedroom, kitchen, office, dining room, and more.
 
-![Step 2 Choose Room](Step2.PNG)
+<p align="center">
+  <img src="iDesign/Step2.PNG" width="300" alt="Step 2 Choose Room Type" />
+</p>
 
 ---
 
