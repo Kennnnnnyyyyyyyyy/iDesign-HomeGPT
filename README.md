@@ -26,18 +26,14 @@ The platform is designed with a modern mobile first frontend and a scalable back
 
 The following screenshots are maintained inside the repository to document the UI flow and user experience.
 
-<p align="center">
-  <img src="Home.PNG" width="300" alt="Home Screen" />
-</p>
-
----
 
 ### **Home Screen**
 
 The home screen welcomes users and provides entry points to start a new design project or view previously generated designs. It also highlights core features such as Interior Design, Exterior Design, Object Replacement, and Style Transfer.
 
-![Home Screen](Home.PNG)
-
+<p align="center">
+  <img src="iDesign/Home.PNG" width="300" alt="Home Screen" />
+</p>
 ---
 
 ### **Step 1: Upload or Select Reference Image**
