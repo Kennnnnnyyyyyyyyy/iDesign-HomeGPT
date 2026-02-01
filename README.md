@@ -26,7 +26,9 @@ The platform is designed with a modern mobile first frontend and a scalable back
 
 The following screenshots are maintained inside the repository to document the UI flow and user experience.
 
-![Repository Assets](Home.PNG)
+<p align="center">
+  <img src="Home.PNG" width="300" alt="Home Screen" />
+</p>
 
 ---
 
