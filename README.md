@@ -74,8 +74,9 @@ Examples include modern, contemporary, minimalist, Scandinavian, industrial, rus
 
 Users select a curated color palette to further refine the output. Once selected, the system generates a high quality AI enhanced design image based on all chosen parameters.
 
-![Step 4 Select Palette](Step4.PNG)
-
+<p align="center">
+  <img src="iDesign/Step4.PNG" width="300" alt="Step 4 Select Color Palette and Generate Design" />
+</p>
 ---
 
 ## **Frontend Architecture**
