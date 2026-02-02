@@ -34,6 +34,7 @@ The home screen welcomes users and provides entry points to start a new design p
 <p align="center">
   <img src="iDesign/Home.PNG" width="300" alt="Home Screen" />
 </p>
+
 ---
 
 ### **Step 1: Upload or Select Reference Image**
@@ -77,6 +78,7 @@ Users select a curated color palette to further refine the output. Once selected
 <p align="center">
   <img src="iDesign/Step4.PNG" width="300" alt="Step 4 Select Color Palette and Generate Design" />
 </p>
+
 ---
 
 ## **Frontend Architecture**
