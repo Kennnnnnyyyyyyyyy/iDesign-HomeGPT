@@ -153,7 +153,8 @@ The backend is designed as a modular and scalable AI processing system.
 The application is actively developed and structured for production deployment. The architecture supports future expansion including additional design tools, real time editing, and collaborative features.
 
 ---
-
 ## **License**
 
-This project is proprietary and intended for controlled distribution. Licensing terms will be defined separately.
+MIT License © 2026 Kennnnnnyyyyyyyyy
+
+See the [LICENSE](./LICENSE) file for full license text.
